@@ -1,0 +1,63 @@
+{
+  "version": "v1-draft",
+  "policy": {
+    "default": "deny",
+    "allowMethods": ["GET"],
+    "nonGetExceptions": []
+  },
+  "capabilities": {
+    "org_snapshot": [
+      "getPackagesOverview",
+      "getPixelsOverview",
+      "exportCompanyRollup"
+    ],
+    "package_snapshot": [
+      "getPackageByName",
+      "getPackageById",
+      "exportPackageEvents",
+      "exportEntityAggregates"
+    ],
+    "top_referrers_and_acquisition": [
+      "exportEntityPackageEvents",
+      "exportEntityTrackingPixelEvents",
+      "exportTrackingPixelEvents"
+    ],
+    "lead_and_funnel_summary": [
+      "exportCompanyRollup",
+      "exportCompanyPackageRollup",
+      "exportCompanyPixelRollup",
+      "exportEntityScarfScores"
+    ],
+    "export_helper": [
+      "getScheduledExports",
+      "getScheduledExportsHistory"
+    ],
+    "nl_qa_guardrails": [
+      "getPackages",
+      "getTrackingPixels",
+      "getPackageByName",
+      "getPackageById",
+      "getTrackingPixel"
+    ]
+  },
+  "explicitAllowlist": [
+    "getPackages",
+    "getPackagesOverview",
+    "getPackageByName",
+    "getPackageById",
+    "exportEntityAggregates",
+    "exportEntityPackageEvents",
+    "exportPackageEvents",
+    "getTrackingPixels",
+    "getTrackingPixel",
+    "getPixelsOverview",
+    "exportEntityTrackingPixelEvents",
+    "exportTrackingPixelEvents",
+    "exportCompanyRollup",
+    "exportCompanyPackageRollup",
+    "exportCompanyPixelRollup",
+    "exportEntityScarfScores",
+    "getScheduledExports",
+    "getScheduledExportsHistory"
+  ]
+}
