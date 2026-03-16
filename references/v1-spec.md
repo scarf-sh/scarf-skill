@@ -6,8 +6,9 @@ Enable a Scarf user to connect their own API token and complete common Scarf wor
 
 ## 2) Naming and packaging
 
-- Public project/repo: `scarf-ai-skill`
-- Product/display name: **Scarf Data Assistant**
+- Current private repo: `scarf-ai-skill`
+- Public positioning target: `scarf-skill`
+- Keep current repo private until first release tag is created.
 - First distribution targets:
   1. GitHub OSS repo
   2. ClawHub listing
@@ -40,7 +41,7 @@ Ship 6 core capabilities:
 4. **Lead/funnel summary**
    - answer: recent OQL/adoption stage changes
 5. **Export helper**
-   - answer: trigger or locate export jobs and summarize status
+   - answer: locate export jobs and summarize status
 6. **Natural-language Q&A with guardrails**
    - convert prompts into bounded API queries with explicit date ranges
 
@@ -51,25 +52,26 @@ Out of scope for v1:
 
 ## 5) Auth and security model
 
-- Input secret: `SCARF_API_TOKEN`
-- Optional: org/package defaults via env vars or explicit request params
+- Input secret: `SCARF_API_TOKEN` (required)
+- Organization scope (`owner`) is required before execution
+- Optional package/entity defaults via env vars or explicit params
 - Never print token in outputs, logs, traces, or errors
 - Sanitize headers before debug output
 - Add `--debug` mode that redacts secret fields
 
 Error mapping (minimum):
-- `401`: invalid/expired token → “re-auth with a valid Scarf API token”
-- `403`: insufficient permission → “token lacks access to this org/package”
+- `401`: invalid/expired token -> re-auth with a valid Scarf API token
+- `403`: insufficient permission -> token lacks access to this org/package
 - `404`: resource missing or inaccessible
 - `429`: rate-limited; retry with backoff and narrowed query window
 - `5xx`: transient server issue; retry + fallback messaging
 
 ## 6) API strategy
 
-Use `scarf-repo/api-server/api-v2-final.yaml` as the source of truth for public API coverage.
+Use `scarf-repo/api-server/api-v2-final.yaml` as source of truth for public API coverage.
 
 Implementation approach:
-- maintain an internal endpoint map (`api-map.json`) generated from the public spec.
+- maintain internal endpoint map: `references/api-map.v1.json`
 - record for each operation:
   - method
   - path
@@ -78,42 +80,47 @@ Implementation approach:
   - primary response fields
 
 Current status:
-- initial endpoint inventory created at `references/api-v2-endpoint-inventory.md`.
-- initial capability-to-endpoint mapping created at `references/api-map.v1.json` with explicit default-deny allowlist.
+- endpoint inventory: `references/api-v2-endpoint-inventory.md`
+- capability mapping + default-deny allowlist: `references/api-map.v1.json`
 
-Next step:
-- refine metric/query defaults per capability (date windows, pagination, CSV handling).
-- add golden prompt tests and expected output fixtures.
+## 7) Query defaults and filters
 
-## 7) Assistant behavior contract
+- Timezone: **UTC** for all normalization and output labels
+- Default date window (if omitted): last **30 days** `[now-30d, now)` in UTC
+- Use `filter_id` when endpoint supports it and filter context is provided
+- Require explicit override for unusually broad windows (> 365 days)
+
+## 8) Assistant behavior contract
 
 For each user request, always return:
 
 1. **Answer first** (one short paragraph or bullets)
 2. **Evidence** (key metrics and date range)
-3. **Assumptions/filters** (org, package, timezone)
+3. **Assumptions/filters** (org, package, timezone, filter_id if used)
 4. **Next useful action** (one suggestion)
 
-If the request is ambiguous, ask one clarifying question only.
+If request is ambiguous, ask one clarifying question only.
 
-## 8) Testing and quality
+## 9) Testing and quality
 
 Minimum test matrix:
 
 - auth: valid / invalid / forbidden
-- query: small and large date ranges
+- org required behavior: missing owner should block with clear prompt
+- query: default 30-day UTC window and custom windows
 - pagination: single-page and multi-page responses
+- filter usage: with and without `filter_id`
 - no-data response behavior
 - retry on 429/5xx
 - schema drift tolerance for non-critical fields
 
 Golden prompt tests (text fixtures):
-- “How did package X do last 30 days?”
-- “Which companies started showing up this week?”
-- “What changed vs previous period?”
-- “Give me top opportunities to follow up on today.”
+- How did package X do last 30 days?
+- Which companies started showing up this week?
+- What changed vs previous period?
+- Give me top opportunities to follow up on today.
 
-## 9) Initial repo structure
+## 10) Initial repo structure
 
 ```text
 scarf-ai-skill/
@@ -124,19 +131,17 @@ scarf-ai-skill/
     prompt-examples.md
 ```
 
-If we turn this into a runnable toolkit, add:
+At release rename time, move to:
 
 ```text
-  scripts/
-    scarf_client.py (or ts)
-    auth_check.py
-    run_query.py
-  tests/
+scarf-skill/
+  SKILL.md
+  references/
 ```
 
-## 10) Release plan
+## 11) Release plan
 
-Phase 1 (now): finalize capability spec + endpoint map
-Phase 2: build lightweight client + prompt handlers
-Phase 3: private dogfood with 2-3 Scarf users
-Phase 4: public OSS release + ClawHub + docs launch page
+Phase 1 (now): finalize capability spec + endpoint map + release docs
+Phase 2: private dogfood with 2-3 Scarf users
+Phase 3: lightweight SemVer tag `v0.1.0` (private)
+Phase 4: repo rename + public OSS + ClawHub + docs launch page

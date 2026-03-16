@@ -1,29 +1,42 @@
-# Scarf Data Assistant (draft)
+# scarf-skill (private pre-release)
 
-Private draft repo for the Scarf AI skill.
+Private prep repo for the first public release of the Scarf skill.
 
-## Current status
+## Positioning / rename status
 
-- v1 scope drafted
-- public API endpoint inventory generated from `api-v2-final.yaml`
-- default-deny v1 allowlist (`GET` only)
-- prompt examples and launch checklist included
+- Current repo path/name: `scarf-ai-skill`
+- Public positioning target: **`scarf-skill`**
+- Rename is **not executed yet** (kept private until first tag).
 
-## Files
+### Rename steps to run at release time
+
+1. Rename GitHub repo `scarf-ai-skill` -> `scarf-skill`.
+2. Update skill frontmatter `name:` to `scarf-skill`.
+3. Verify all internal references and links after rename.
+4. Create lightweight SemVer tag `v0.1.0`.
+
+## v1 contract (read-only)
+
+- Auth env var: `SCARF_API_TOKEN` (required)
+- Organization scope: required (`owner` / org slug)
+- Timezone handling: **UTC only** for all defaults and reporting
+- Default date window when missing: last **30 days** (`[now-30d, now)` in UTC)
+- API scope: **GET-only** (no create/update/delete in v1)
+- Optional narrowing: use `filter_id` when endpoint supports it
+
+## Included files
 
 - `SKILL.md`
 - `references/v1-spec.md`
+- `references/v1-allowlist.md`
 - `references/api-v2-endpoint-inventory.md`
 - `references/api-map.v1.json`
-- `references/v1-allowlist.md`
 - `references/prompt-examples.md`
 - `references/launch-checklist.md`
+- `RELEASE_CHECKLIST.md`
+- `LICENSE` (Apache-2.0)
 
-## Auth model (v1)
+## Privacy/release posture
 
-- User-provided Scarf API token
-- Read-only data fetch focus
-
-## Notes
-
-This repo is in private review before public release.
+- Keep repo private until first tag (`v0.1.0`) is cut.
+- Public release happens immediately after tag + repo rename validation.

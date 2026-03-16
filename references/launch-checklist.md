@@ -3,38 +3,43 @@
 ## Product
 
 - [ ] v1 scope frozen (no new capabilities during hardening)
-- [ ] clear non-goals documented
+- [ ] non-goals documented and accepted
 - [ ] sample prompts reviewed by Scarf team
+- [ ] positioning aligned to `scarf-skill` naming
 
 ## API + Data
 
-- [ ] endpoint inventory complete (`api-map.json` planned)
-- [ ] per-capability endpoint mapping complete
-- [ ] pagination and date-window behavior validated
+- [ ] endpoint inventory complete (`references/api-v2-endpoint-inventory.md`)
+- [ ] capability mapping complete (`references/api-map.v1.json`)
+- [ ] UTC date handling validated end-to-end
+- [ ] default 30-day window validated (`[now-30d, now)` UTC)
+- [ ] org-required behavior validated (missing owner blocks execution)
+- [ ] `filter_id` behavior validated for supported endpoints
 - [ ] no-data behavior tested for all capabilities
 
 ## Security
 
-- [ ] token handling reviewed
+- [ ] `SCARF_API_TOKEN` required
 - [ ] token redaction verified in logs/errors
 - [ ] read-only default behavior enforced
-- [ ] explicit confirmation required for mutating operations
+- [ ] GET-only v1 policy enforced
 
 ## Reliability
 
 - [ ] retry/backoff on 429 and 5xx
 - [ ] timeout policy defined
-- [ ] structured, user-friendly error messages shipped
+- [ ] user-friendly error messages shipped
 
 ## Docs + Distribution
 
-- [ ] GitHub repo public with clear examples
-- [ ] ClawHub listing published
-- [ ] docs.scarf.sh page added (quickstart + examples)
-- [ ] versioning + compatibility policy published
+- [ ] Apache-2.0 `LICENSE` present
+- [ ] `README.md` + `SKILL.md` + references align on auth/defaults/UTC/filter behavior
+- [ ] no deprecated/removed file references remain
+- [ ] lightweight release tag plan documented (`v0.1.0`)
+- [ ] repo remains private until first tag
 
 ## GTM / Feedback
 
 - [ ] dogfood with internal team + 2-3 design partners
 - [ ] telemetry for success/failure (non-sensitive)
-- [ ] issue template for user-reported API mismatches
+- [ ] issue template for API mismatch reports
