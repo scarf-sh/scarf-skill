@@ -54,3 +54,24 @@ Prompt:
 
 Expected behavior:
 - Ask one clarifying question (org/package + date range), then proceed
+
+## 7) Build a saved insights filter (examples)
+
+Prompt:
+- "Create a saved filter for Fortune 500 companies in the United States on version 5.x and then use it for company rollup for last 7 days"
+
+Expected behavior:
+- Create/choose a filter scope (default `global` unless user asks for `adhoc`)
+- Construct a `SetInsightsFilters` JSON payload
+- `PUT /v2/insights/{owner}/filters?filter_scope=global`
+- Use returned `id` as `filter_id` on supported analytics calls
+
+Example payload:
+```json
+{
+  "name": "Fortune 500 / US / version 5.x",
+  "company_is_fortune_500": { "value": true },
+  "company_country": { "op": "equals", "values": ["United States"] },
+  "request_version": { "op": "starts-with", "values": ["5."] }
+}
+```

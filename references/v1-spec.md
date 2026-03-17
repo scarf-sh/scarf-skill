@@ -89,6 +89,13 @@ Current status:
 - Use `filter_id` when endpoint supports it and filter context is provided
 - Require explicit override for unusually broad windows (> 365 days)
 
+### Filter catalog + examples
+
+See `references/filter-catalog.md` for:
+- full list of filter keys
+- operator enums
+- copy/paste examples (e.g. Fortune 500 + US + version prefix)
+
 ## 8) Assistant behavior contract
 
 For each user request, always return:
