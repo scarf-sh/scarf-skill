@@ -3,7 +3,11 @@
   "policy": {
     "default": "deny",
     "allowMethods": ["GET"],
-    "nonGetExceptions": []
+    "nonGetExceptions": [
+      "setInsightsFilters",
+      "setInsightsFiltersName",
+      "deleteInsightsFiltersName"
+    ]
   },
   "capabilities": {
     "org_snapshot": [
@@ -38,9 +42,23 @@
       "getPackageByName",
       "getPackageById",
       "getTrackingPixel"
+    ],
+    "insights_filters_management": [
+      "getInsightsFilters",
+      "getInsightsFiltersByScope",
+      "setInsightsFilters",
+      "getNamedInsightsFilters",
+      "setInsightsFiltersName",
+      "deleteInsightsFiltersName"
     ]
   },
   "explicitAllowlist": [
+    "getInsightsFilters",
+    "getInsightsFiltersByScope",
+    "setInsightsFilters",
+    "getNamedInsightsFilters",
+    "setInsightsFiltersName",
+    "deleteInsightsFiltersName",
     "getPackages",
     "getPackagesOverview",
     "getPackageByName",

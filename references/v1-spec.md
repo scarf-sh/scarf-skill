@@ -29,7 +29,7 @@ Result: public skill ships now; MCP can become a drop-in backend later.
 
 ## 4) v1 scope (tight, useful)
 
-Ship 6 core capabilities:
+Ship 7 core capabilities:
 
 1. **Org snapshot**
    - answer: high-level usage trend, top packages, top geos/orgs (as available)
@@ -43,9 +43,11 @@ Ship 6 core capabilities:
    - answer: locate export jobs and summarize status
 6. **Natural-language Q&A with guardrails**
    - convert prompts into bounded API queries with explicit date ranges
+7. **Insights filter management**
+   - answer: create/update/list/name reusable or ad hoc insights filters and apply the returned `filter_id`
 
 Out of scope for v1:
-- all write automation
+- write automation outside the approved insights-filter endpoints
 - multi-org orchestration
 - background jobs and scheduling inside the skill itself
 
@@ -57,6 +59,7 @@ Out of scope for v1:
 - Never print token in outputs, logs, traces, or errors
 - Sanitize headers before debug output
 - Add `--debug` mode that redacts secret fields
+- Require explicit user intent before mutating filter state
 
 Error mapping (minimum):
 - `401`: invalid/expired token -> re-auth with a valid Scarf API token
@@ -67,7 +70,7 @@ Error mapping (minimum):
 
 ## 6) API strategy
 
-Use `scarf-repo/api-server/api-v2-final.yaml` as source of truth for public API coverage.
+Use the published v2 OpenAPI spec (`https://api.scarf.sh/static/api-v2.yaml`) as source of truth for public API coverage.
 
 Implementation approach:
 - maintain internal endpoint map: `references/api-map.v1.json`
@@ -87,12 +90,19 @@ Current status:
 - Timezone: **UTC** for all normalization and output labels
 - Default date window (if omitted): last **30 days** `[now-30d, now)` in UTC
 - Use `filter_id` when endpoint supports it and filter context is provided
+- Prefer `adhoc` scope for one-off filters; use `global` scope for reusable saved filters
+- Approved filter mutations:
+  - `PUT /v2/insights/{owner}/filters`
+  - `POST /v2/insights/{owner}/filters/{filter_id}/name`
+  - `DELETE /v2/insights/{owner}/filters/{filter_id}/name/{name}`
+- Keep CRM sync deletion and user-defined variable writes out of v1 scope
 - Require explicit override for unusually broad windows (> 365 days)
 
 ### Filter catalog + examples
 
 See `references/filter-catalog.md` for:
 - full list of filter keys
+- scope guidance (`adhoc` vs `global`)
 - operator enums
 - copy/paste examples (e.g. Fortune 500 + US + version prefix)
 
@@ -102,7 +112,7 @@ For each user request, always return:
 
 1. **Answer first** (one short paragraph or bullets)
 2. **Evidence** (key metrics and date range)
-3. **Assumptions/filters** (org, package, timezone, filter_id if used)
+3. **Assumptions/filters** (org, package, timezone, scope, filter_id if used)
 4. **Next useful action** (one suggestion)
 
 If request is ambiguous, ask one clarifying question only.
@@ -116,6 +126,7 @@ Minimum test matrix:
 - query: default 30-day UTC window and custom windows
 - pagination: single-page and multi-page responses
 - filter usage: with and without `filter_id`
+- filter management: create/update-by-scope, list named filters, add/delete names
 - no-data response behavior
 - retry on 429/5xx
 - schema drift tolerance for non-critical fields
