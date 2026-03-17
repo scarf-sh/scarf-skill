@@ -6,9 +6,8 @@ Enable a Scarf user to connect their own API token and complete common Scarf wor
 
 ## 2) Naming and packaging
 
-- Current private repo: `scarf-ai-skill`
-- Public positioning target: `scarf-skill`
-- Keep current repo private until first release tag is created.
+- Repo name: `scarf-skill`
+- Keep repo private until first public release process is complete.
 - First distribution targets:
   1. GitHub OSS repo
   2. ClawHub listing
@@ -123,7 +122,7 @@ Golden prompt tests (text fixtures):
 ## 10) Initial repo structure
 
 ```text
-scarf-ai-skill/
+scarf-skill/
   SKILL.md
   references/
     v1-spec.md
@@ -131,7 +130,7 @@ scarf-ai-skill/
     prompt-examples.md
 ```
 
-At release rename time, move to:
+Target structure:
 
 ```text
 scarf-skill/
@@ -144,4 +143,4 @@ scarf-skill/
 Phase 1 (now): finalize capability spec + endpoint map + release docs
 Phase 2: private dogfood with 2-3 Scarf users
 Phase 3: lightweight SemVer tag `v0.1.0` (private)
-Phase 4: repo rename + public OSS + ClawHub + docs launch page
+Phase 4: public OSS + ClawHub + docs launch page

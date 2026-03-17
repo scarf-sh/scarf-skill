@@ -4,16 +4,16 @@ Private prep repo for the first public release of the Scarf skill.
 
 ## Positioning / rename status
 
-- Current repo path/name: `scarf-ai-skill`
-- Public positioning target: **`scarf-skill`**
-- Rename is **not executed yet** (kept private until first tag).
+- Canonical repo name: **`scarf-skill`** (remote updated).
+- Local working directory may still be `scarf-ai-skill` depending on clone path.
+- Rename/release prep steps have been applied.
 
-### Rename steps to run at release time
+### Rename/release prep status
 
-1. Rename GitHub repo `scarf-ai-skill` -> `scarf-skill`.
-2. Update skill frontmatter `name:` to `scarf-skill`.
-3. Verify all internal references and links after rename.
-4. Create lightweight SemVer tag `v0.1.0`.
+1. GitHub remote points to `scarf-sh/scarf-skill`.
+2. Skill frontmatter `name:` is `scarf-skill`.
+3. Internal references checked/updated for renamed repo intent.
+4. Lightweight SemVer tag target: `v0.1.0`.
 
 ## v1 contract (read-only)
 

@@ -14,6 +14,6 @@
 - [ ] Commit release-prep docs
 - [ ] Create lightweight tag: `git tag v0.1.0`
 - [ ] Push commit + tag: `git push origin main --follow-tags`
-- [ ] Rename repo to `scarf-skill` (if not already)
-- [ ] Update `SKILL.md` frontmatter `name: scarf-skill`
-- [ ] Re-run quick doc link/reference check after rename
+- [ ] Verify repo is named `scarf-skill`
+- [ ] Verify `SKILL.md` frontmatter is `name: scarf-skill`
+- [ ] Re-run quick doc link/reference check

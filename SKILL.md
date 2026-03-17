@@ -1,5 +1,5 @@
 ---
-name: scarf
+name: scarf-skill
 user-invocable: true
 description: Scarf Data Assistant skill for AI agents to answer Scarf analytics questions with a user-provided SCARF_API_TOKEN using Scarf public v2 API endpoints. Use when users ask for Scarf package/org metrics, funnel/lead summaries, export status, or bounded read-only data retrieval workflows.
 ---
