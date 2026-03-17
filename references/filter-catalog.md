@@ -1,6 +1,21 @@
 # Insights Filters Catalog (v1)
 
-Canonical source: `scarf-repo/api-lib/insights-filters/*` (generated API types).
+Canonical source: published public v2 OpenAPI spec at `https://api.scarf.sh/static/api-v2.yaml`.
+
+## Management endpoints
+
+- `GET /v2/insights/filters/{filter_id}`
+- `GET /v2/insights/{owner}/filters?filter_scope=adhoc|global`
+- `PUT /v2/insights/{owner}/filters?filter_scope=adhoc|global`
+- `GET /v2/insights/{owner}/filters/named`
+- `POST /v2/insights/{owner}/filters/{filter_id}/name`
+- `DELETE /v2/insights/{owner}/filters/{filter_id}/name/{name}`
+
+Skill guidance:
+
+- Prefer `adhoc` scope for one-off analysis.
+- Use `global` scope when the user wants a reusable or saved filter.
+- `deleteInsightsFiltersToCrmSync` and `setUserDefinedVariables` remain out of v1 scope.
 
 ## Payload shape
 
@@ -13,7 +28,7 @@ You can optionally include:
 - `name` (saved filter name)
 - `crm_connections` (list of CRM integration ids)
 
-Then apply the returned `id` via `filter_id` on supported analytics endpoints.
+Then apply the returned `id` via `filter_id` on supported analytics endpoints. Reusable names can be added later with `POST /v2/insights/{owner}/filters/{filter_id}/name` and enumerated with `GET /v2/insights/{owner}/filters/named`.
 
 ## Operators / enums
 

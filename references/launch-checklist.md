@@ -15,6 +15,7 @@
 - [ ] default 30-day window validated (`[now-30d, now)` UTC)
 - [ ] org-required behavior validated (missing owner blocks execution)
 - [ ] `filter_id` behavior validated for supported endpoints
+- [ ] insights-filter management endpoints validated end-to-end (`set`, `list named`, `name`, `delete name`)
 - [ ] no-data behavior tested for all capabilities
 
 ## Security
@@ -22,7 +23,7 @@
 - [ ] `SCARF_API_TOKEN` required
 - [ ] token redaction verified in logs/errors
 - [ ] read-only default behavior enforced
-- [ ] GET-only v1 policy enforced
+- [ ] limited non-`GET` filter-management exceptions enforced
 
 ## Reliability
 

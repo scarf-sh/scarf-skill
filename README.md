@@ -2,18 +2,21 @@
 
 Private prep repo for the first public release of the Scarf skill.
 
-## v1 contract (read-only)
+## v1 contract (analytics-first with bounded filter management)
 
 - Auth env var: `SCARF_API_TOKEN` (required)
 - Organization scope: required (`owner` / org slug)
 - Timezone handling: **UTC only** for all defaults and reporting
 - Default date window when missing: last **30 days** (`[now-30d, now)` in UTC)
-- API scope: **GET-only** (no create/update/delete in v1)
-- Optional narrowing: use `filter_id` when endpoint supports it
+- API scope: `GET` by default, plus limited insights-filter mutations
+- Allowed filter mutations: `setInsightsFilters`, `setInsightsFiltersName`, `deleteInsightsFiltersName`
+- Optional narrowing: use `filter_id` when endpoint supports it, or create/list/name filters through the public insights-filter endpoints
+- Scope guidance: prefer `adhoc` for one-off analysis and `global` for reusable saved filters
 
 ## Included files
 
 - `SKILL.md`
+- `references/filter-catalog.md`
 - `references/v1-spec.md`
 - `references/v1-allowlist.md`
 - `references/api-v2-endpoint-inventory.md`

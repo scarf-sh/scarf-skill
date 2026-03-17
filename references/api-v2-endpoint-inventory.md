@@ -1,13 +1,13 @@
 # Scarf API v2 Endpoint Inventory (Public Spec Source)
 
-Source file: `scarf-repo/api-server/api-v2-final.yaml`
+Published spec: `https://api.scarf.sh/static/api-v2.yaml`
 
 Notes:
-- Inventory generated from the published v2 OpenAPI spec file in `scarf-repo`.
+- Inventory generated from the published v2 OpenAPI spec.
 - Include only endpoints present in this file for skill v1.
 - Ignore internal-only fields unless they are documented for external users.
 
-Total operations: 71
+Total operations: 80
 
 ## Collections (5)
 
@@ -53,6 +53,20 @@ Total operations: 71
  |
 | `importEvents` | `POST` | `/v2/{owner}/import` | Import events in bulk
  |
+
+## Insights Filters (9)
+
+| operationId | Method | Path | Summary |
+|---|---|---|---|
+| `getInsightsFilters` | `GET` | `/v2/insights/filters/{filter_id}` | Returns the insights filter with the given id |
+| `getInsightsFiltersByScope` | `GET` | `/v2/insights/{owner}/filters` | Returns the insights filter within the given scope |
+| `setInsightsFilters` | `PUT` | `/v2/insights/{owner}/filters` | Creates or updates insights filters for a scope |
+| `getNamedInsightsFilters` | `GET` | `/v2/insights/{owner}/filters/named` | Lists named insights filters |
+| `setInsightsFiltersName` | `POST` | `/v2/insights/{owner}/filters/{filter_id}/name` | Associates a name to a set of filters |
+| `deleteInsightsFiltersName` | `DELETE` | `/v2/insights/{owner}/filters/{filter_id}/name/{name}` | Delete a name from an insights filter |
+| `deleteInsightsFiltersToCrmSync` | `DELETE` | `/v2/insights/{owner}/filters/{filter_id}/crm` | Deletes the CRM sync configuration for a filter |
+| `getUserDefinedVariables` | `GET` | `/v2/insights/{owner}/user-defined-variables` | Gets persisted user-defined variables |
+| `setUserDefinedVariables` | `POST` | `/v2/insights/{owner}/user-defined-variables` | Sets persisted user-defined variables |
 
 ## Organization (3)
 
@@ -135,4 +149,3 @@ Total operations: 71
 |---|---|---|---|
 | `getUserInformation` | `GET` | `/v2/users/{username}` | Get user |
 | `getUserOrganizations` | `GET` | `/v2/users/{username}/organizations` | List user organizatons |
-
