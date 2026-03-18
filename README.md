@@ -24,5 +24,4 @@ Scarf Data Assistant skill for Scarf analytics and insights-filter workflows.
 - `references/api-map.v1.json`
 - `references/prompt-examples.md`
 - `references/launch-checklist.md`
-- `RELEASE_CHECKLIST.md`
 - `LICENSE` (Apache-2.0)
