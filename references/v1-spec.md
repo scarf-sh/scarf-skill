@@ -42,11 +42,11 @@ Ship 7 core capabilities:
    - answer: locate export jobs and summarize status
 6. **Natural-language Q&A with guardrails**
    - convert prompts into bounded API queries with explicit date ranges
-7. **Insights filter management**
-   - answer: list/create/get/update/delete reusable or ad hoc filters and apply the returned `filter_id`
+7. **Insights workflow management**
+   - answer: list/create/get/update/delete reusable or ad hoc filters, read/set persisted user-defined variables, and apply returned `filter_id` values where supported
 
 Out of scope for v1:
-- write automation outside the approved insights-filter CRUD endpoints
+- write automation outside the approved insights workflow endpoints
 - multi-org orchestration
 - background jobs and scheduling inside the skill itself
 
@@ -90,13 +90,14 @@ Current status:
 - Default date window (if omitted): last **30 days** `[now-30d, now)` in UTC
 - Use `filter_id` when endpoint supports it and filter context is provided
 - For filter CRUD, use `/v2/insights/{owner}/filters` and `/v2/insights/{owner}/filters/{filter_id}`
+- For persisted variables, use `/v2/insights/{owner}/user-defined-variables`
 - Use `scope=adhoc|global` when listing or creating filters
 - Use `saved_only=true` when the user explicitly asks for saved filters only
-- Approved filter mutations:
+- Approved insights mutations:
   - `POST /v2/insights/{owner}/filters`
   - `PUT /v2/insights/{owner}/filters/{filter_id}`
   - `DELETE /v2/insights/{owner}/filters/{filter_id}`
-- Keep user-defined variable writes out of v1 scope
+  - `POST /v2/insights/{owner}/user-defined-variables`
 - Require explicit override for unusually broad windows (> 365 days)
 
 ### Filter catalog + examples
@@ -127,7 +128,7 @@ Minimum test matrix:
 - query: default 30-day UTC window and custom windows
 - pagination: single-page and multi-page responses
 - filter usage: with and without `filter_id`
-- filter CRUD: list/create/get/update/delete, including `scope` and `saved_only`
+- insights workflows: list/create/get/update/delete filters (including `scope` and `saved_only`) plus get/set persisted user-defined variables
 - no-data response behavior
 - retry on 429/5xx
 - schema drift tolerance for non-critical fields

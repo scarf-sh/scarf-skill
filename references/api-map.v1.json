@@ -6,7 +6,8 @@
     "nonGetExceptions": [
       "createInsightsFilter",
       "updateInsightsFilter",
-      "deleteInsightsFilter"
+      "deleteInsightsFilter",
+      "setUserDefinedVariables"
     ]
   },
   "capabilities": {
@@ -48,7 +49,9 @@
       "createInsightsFilter",
       "getInsightsFilter",
       "updateInsightsFilter",
-      "deleteInsightsFilter"
+      "deleteInsightsFilter",
+      "getUserDefinedVariables",
+      "setUserDefinedVariables"
     ]
   },
   "explicitAllowlist": [
@@ -57,6 +60,8 @@
     "getInsightsFilter",
     "updateInsightsFilter",
     "deleteInsightsFilter",
+    "getUserDefinedVariables",
+    "setUserDefinedVariables",
     "getPackages",
     "getPackagesOverview",
     "getPackageByName",

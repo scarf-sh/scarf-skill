@@ -105,3 +105,22 @@ Expected behavior:
 - Resolve the target `filter_id`
 - `DELETE /v2/insights/{owner}/filters/{filter_id}`
 - Confirm deletion and note that analytics calls must no longer reference that `filter_id`
+
+## 11) Read persisted user-defined variables
+
+Prompt:
+- "Show the persisted user-defined variables for scarf"
+
+Expected behavior:
+- `GET /v2/insights/{owner}/user-defined-variables`
+- Return current key/value map concisely
+
+## 12) Set persisted user-defined variables
+
+Prompt:
+- "Set persisted user-defined variables to include campaign=launch-q2"
+
+Expected behavior:
+- Build the updated variable map payload
+- `POST /v2/insights/{owner}/user-defined-variables`
+- Confirm exactly which keys changed

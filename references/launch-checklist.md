@@ -15,7 +15,8 @@
 - [ ] default 30-day window validated (`[now-30d, now)` UTC)
 - [ ] org-required behavior validated (missing owner blocks execution)
 - [ ] `filter_id` behavior validated for supported endpoints
-- [ ] insights-filter CRUD endpoints validated end-to-end (`list`, `create`, `get`, `update`, `delete`)
+- [ ] insights-filter endpoints validated end-to-end (`list`, `create`, `get`, `update`, `delete`)
+- [ ] persisted user-defined variables endpoints validated end-to-end (`get`, `set`)
 - [ ] no-data behavior tested for all capabilities
 
 ## Security

@@ -15,12 +15,13 @@
   - `createInsightsFilter`
   - `updateInsightsFilter`
   - `deleteInsightsFilter`
-- `getUserDefinedVariables` and `setUserDefinedVariables` are documented public endpoints, but user-defined variable writes remain outside the v1 allowlist.
-- If a user asks for create/update/delete actions outside the approved filter CRUD endpoints, respond that v1 supports analytics plus limited insights-filter management only.
+  - `setUserDefinedVariables`
+- `getUserDefinedVariables` is in-scope as a `GET` operation.
+- If a user asks for create/update/delete actions outside the approved insights workflow operations, respond that v1 supports analytics plus limited insights-filter and persisted-variable management only.
 
 ## Why this policy
 
 - Increases reliability and predictability.
 - Reduces accidental side effects.
-- Preserves the new public filter CRUD workflow without reopening the broader write surface.
+- Preserves the new public insights workflow (filters + persisted variables) without reopening the broader write surface.
 - Speeds up validation and launch.

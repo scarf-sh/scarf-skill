@@ -1,7 +1,7 @@
 ---
-name: scarf-skill
+name: scarf
 user-invocable: true
-description: Scarf Data Assistant skill for AI agents to answer Scarf analytics questions and manage insights filters with a user-provided SCARF_API_TOKEN using Scarf public v2 API endpoints. Use when users ask for Scarf package/org metrics, funnel/lead summaries, export status, or bounded insights-filter CRUD workflows.
+description: Scarf Data Assistant skill for AI agents to answer Scarf analytics questions, manage insights filters, and read or set persisted user-defined variables with a user-provided SCARF_API_TOKEN using Scarf public v2 API endpoints. Use when users ask for Scarf package/org metrics, funnel/lead summaries, export status, or bounded insights-filter workflows.
 ---
 
 # Scarf Data Assistant
@@ -14,12 +14,13 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 - Never log, print, or persist raw tokens.
 - Require organization scope (`owner`) before query execution.
 - Default to read-oriented analytics flows.
-- Allow insights-filter CRUD as the only v1 write surface.
-- v1 policy: execute `GET` operations plus the explicit insights-filter CRUD exceptions below.
+- Allow bounded insights-filter workflows as the only v1 write surface.
+- v1 policy: execute `GET` operations plus the explicit insights-filter and persisted-variable exceptions below.
 - Allowed non-`GET` operations:
   - `POST /v2/insights/{owner}/filters`
   - `PUT /v2/insights/{owner}/filters/{filter_id}`
   - `DELETE /v2/insights/{owner}/filters/{filter_id}`
+  - `POST /v2/insights/{owner}/user-defined-variables`
 - Block all other create/update/delete operations in v1.
 - Use UTC for all date logic and output labels.
 - If no time range is provided, default to last 30 days: `[now-30d, now)` in UTC.
@@ -33,10 +34,11 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 1. Validate auth (`401/403` handling with clear next-step guidance).
 2. Resolve organization scope (`owner`) and optional package/entity target.
 3. Resolve date range (default 30-day UTC window if omitted).
-4. If the user is managing filters, choose the minimal CRUD operation (`list`, `create`, `get`, `update`, `delete`), plus `scope` and optional `saved_only` as needed.
-5. Apply `filter_id` when an analytics endpoint supports it and a filter context is available.
-6. Run minimal API calls needed to answer the request.
-7. Return:
+4. If the user is managing filters, choose the minimal operation (`list`, `create`, `get`, `update`, `delete`) plus `scope` and optional `saved_only` as needed.
+5. If the user asks to persist or read custom variables, use `getUserDefinedVariables` / `setUserDefinedVariables`.
+6. Apply `filter_id` when an analytics endpoint supports it and a filter context is available.
+7. Run minimal API calls needed to answer the request.
+8. Return:
    - direct answer,
    - key numbers,
    - assumptions,
@@ -47,6 +49,7 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 - Be concise and decision-oriented.
 - Include caveats if data is partial, delayed, sampled, or filtered.
 - If a filter mutation succeeds, state exactly what changed and which `filter_id` or scope was affected.
+- If persisted user-defined variables are written, summarize the keys changed.
 - If the API fails, provide exact reason plus one concrete recovery step.
 
 ## References
