@@ -26,7 +26,3 @@ Scarf Data Assistant skill for Scarf analytics and insights-filter workflows.
 - `references/launch-checklist.md`
 - `RELEASE_CHECKLIST.md`
 - `LICENSE` (Apache-2.0)
-
-## Release status
-
-- Current release target: `0.2.0`
