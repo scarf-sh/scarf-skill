@@ -6,7 +6,7 @@
   - UTC handling
   - default 30-day window
   - org-required behavior
-  - v1 default-`GET` plus bounded filter-management policy
+  - v1 default-`GET` plus bounded filter CRUD policy
   - `filter_id` usage guidance
 - [ ] Confirm Apache-2.0 `LICENSE` exists
 - [ ] Confirm no stale/deprecated file references remain

@@ -7,7 +7,7 @@ Notes:
 - Include only endpoints present in this file for skill v1.
 - Ignore internal-only fields unless they are documented for external users.
 
-Total operations: 80
+Total operations: 78
 
 ## Collections (5)
 
@@ -54,17 +54,15 @@ Total operations: 80
 | `importEvents` | `POST` | `/v2/{owner}/import` | Import events in bulk
  |
 
-## Insights Filters (9)
+## Insights Filters (7)
 
 | operationId | Method | Path | Summary |
 |---|---|---|---|
-| `getInsightsFilters` | `GET` | `/v2/insights/filters/{filter_id}` | Returns the insights filter with the given id |
-| `getInsightsFiltersByScope` | `GET` | `/v2/insights/{owner}/filters` | Returns the insights filter within the given scope |
-| `setInsightsFilters` | `PUT` | `/v2/insights/{owner}/filters` | Creates or updates insights filters for a scope |
-| `getNamedInsightsFilters` | `GET` | `/v2/insights/{owner}/filters/named` | Lists named insights filters |
-| `setInsightsFiltersName` | `POST` | `/v2/insights/{owner}/filters/{filter_id}/name` | Associates a name to a set of filters |
-| `deleteInsightsFiltersName` | `DELETE` | `/v2/insights/{owner}/filters/{filter_id}/name/{name}` | Delete a name from an insights filter |
-| `deleteInsightsFiltersToCrmSync` | `DELETE` | `/v2/insights/{owner}/filters/{filter_id}/crm` | Deletes the CRM sync configuration for a filter |
+| `listInsightsFilters` | `GET` | `/v2/insights/{owner}/filters` | List filters |
+| `createInsightsFilter` | `POST` | `/v2/insights/{owner}/filters` | Create filter |
+| `getInsightsFilter` | `GET` | `/v2/insights/{owner}/filters/{filter_id}` | Get filter |
+| `updateInsightsFilter` | `PUT` | `/v2/insights/{owner}/filters/{filter_id}` | Update filter |
+| `deleteInsightsFilter` | `DELETE` | `/v2/insights/{owner}/filters/{filter_id}` | Delete filter |
 | `getUserDefinedVariables` | `GET` | `/v2/insights/{owner}/user-defined-variables` | Gets persisted user-defined variables |
 | `setUserDefinedVariables` | `POST` | `/v2/insights/{owner}/user-defined-variables` | Sets persisted user-defined variables |
 

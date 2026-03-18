@@ -61,10 +61,9 @@ Prompt:
 - "Create a saved filter for Fortune 500 companies in the United States on version 5.x and then use it for company rollup for last 7 days"
 
 Expected behavior:
-- Create/choose a filter scope (`global` for saved/reusable filters, `adhoc` for one-off analysis)
-- Construct a `SetInsightsFilters` JSON payload
-- `PUT /v2/insights/{owner}/filters?filter_scope=global`
-- Optionally attach a stable name with `POST /v2/insights/{owner}/filters/{filter_id}/name`
+- Choose `scope=global` because the user asked for a saved filter
+- Construct an `InsightsFilterInput` JSON payload
+- `POST /v2/insights/{owner}/filters?scope=global`
 - Use returned `id` as `filter_id` on supported analytics calls
 
 Example payload:
@@ -77,23 +76,32 @@ Example payload:
 }
 ```
 
-## 8) Inspect existing saved filters
+## 8) List saved insights filters
 
 Prompt:
-- "List our named insights filters and show me the one for enterprise accounts"
+- "Show me our saved filters"
 
 Expected behavior:
-- Call `GET /v2/insights/{owner}/filters/named`
-- Return matching names plus the associated filter definition or `filter_id`
-- If there is no exact match, say so and suggest creating or renaming one
+- Call `GET /v2/insights/{owner}/filters?saved_only=true&scope=global`
+- Return concise filter names/ids and ask one follow-up question only if needed
 
-## 9) Temporary ad hoc filter
+## 9) Update an existing filter
 
 Prompt:
-- "Use an ad hoc filter for traffic from Germany on 6.x just for this analysis"
+- "Update filter `f_123` to only include Germany and France"
 
 Expected behavior:
-- Choose `filter_scope=adhoc`
-- Construct the minimal `SetInsightsFilters` payload
-- `PUT /v2/insights/{owner}/filters?filter_scope=adhoc`
-- Use the returned `id` as `filter_id` on the follow-up analytics call
+- Resolve the target `filter_id`
+- Construct the updated `InsightsFilterInput` payload
+- `PUT /v2/insights/{owner}/filters/{filter_id}`
+- Confirm the updated filter and its resulting scope or name if present
+
+## 10) Delete a temporary filter
+
+Prompt:
+- "Delete the temporary filter we just created"
+
+Expected behavior:
+- Resolve the target `filter_id`
+- `DELETE /v2/insights/{owner}/filters/{filter_id}`
+- Confirm deletion and note that analytics calls must no longer reference that `filter_id`

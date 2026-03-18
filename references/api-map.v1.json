@@ -4,9 +4,9 @@
     "default": "deny",
     "allowMethods": ["GET"],
     "nonGetExceptions": [
-      "setInsightsFilters",
-      "setInsightsFiltersName",
-      "deleteInsightsFiltersName"
+      "createInsightsFilter",
+      "updateInsightsFilter",
+      "deleteInsightsFilter"
     ]
   },
   "capabilities": {
@@ -44,21 +44,19 @@
       "getTrackingPixel"
     ],
     "insights_filters_management": [
-      "getInsightsFilters",
-      "getInsightsFiltersByScope",
-      "setInsightsFilters",
-      "getNamedInsightsFilters",
-      "setInsightsFiltersName",
-      "deleteInsightsFiltersName"
+      "listInsightsFilters",
+      "createInsightsFilter",
+      "getInsightsFilter",
+      "updateInsightsFilter",
+      "deleteInsightsFilter"
     ]
   },
   "explicitAllowlist": [
-    "getInsightsFilters",
-    "getInsightsFiltersByScope",
-    "setInsightsFilters",
-    "getNamedInsightsFilters",
-    "setInsightsFiltersName",
-    "deleteInsightsFiltersName",
+    "listInsightsFilters",
+    "createInsightsFilter",
+    "getInsightsFilter",
+    "updateInsightsFilter",
+    "deleteInsightsFilter",
     "getPackages",
     "getPackagesOverview",
     "getPackageByName",

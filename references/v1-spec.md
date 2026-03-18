@@ -44,10 +44,10 @@ Ship 7 core capabilities:
 6. **Natural-language Q&A with guardrails**
    - convert prompts into bounded API queries with explicit date ranges
 7. **Insights filter management**
-   - answer: create/update/list/name reusable or ad hoc insights filters and apply the returned `filter_id`
+   - answer: list/create/get/update/delete reusable or ad hoc filters and apply the returned `filter_id`
 
 Out of scope for v1:
-- write automation outside the approved insights-filter endpoints
+- write automation outside the approved insights-filter CRUD endpoints
 - multi-org orchestration
 - background jobs and scheduling inside the skill itself
 
@@ -70,7 +70,7 @@ Error mapping (minimum):
 
 ## 6) API strategy
 
-Use the published v2 OpenAPI spec (`https://api.scarf.sh/static/api-v2.yaml`) as source of truth for public API coverage.
+Use the published v2 OpenAPI spec (`https://api.scarf.sh/static/api-v2.yaml`) as source of truth for public API coverage. For filter fields and operator guidance, prefer the Scarf-provided `InsightsFilterInput` description in `references/filter-catalog.md` until the public docs catch up.
 
 Implementation approach:
 - maintain internal endpoint map: `references/api-map.v1.json`
@@ -90,19 +90,21 @@ Current status:
 - Timezone: **UTC** for all normalization and output labels
 - Default date window (if omitted): last **30 days** `[now-30d, now)` in UTC
 - Use `filter_id` when endpoint supports it and filter context is provided
-- Prefer `adhoc` scope for one-off filters; use `global` scope for reusable saved filters
+- For filter CRUD, use `/v2/insights/{owner}/filters` and `/v2/insights/{owner}/filters/{filter_id}`
+- Use `scope=adhoc|global` when listing or creating filters
+- Use `saved_only=true` when the user explicitly asks for saved filters only
 - Approved filter mutations:
-  - `PUT /v2/insights/{owner}/filters`
-  - `POST /v2/insights/{owner}/filters/{filter_id}/name`
-  - `DELETE /v2/insights/{owner}/filters/{filter_id}/name/{name}`
-- Keep CRM sync deletion and user-defined variable writes out of v1 scope
+  - `POST /v2/insights/{owner}/filters`
+  - `PUT /v2/insights/{owner}/filters/{filter_id}`
+  - `DELETE /v2/insights/{owner}/filters/{filter_id}`
+- Keep user-defined variable writes out of v1 scope
 - Require explicit override for unusually broad windows (> 365 days)
 
 ### Filter catalog + examples
 
 See `references/filter-catalog.md` for:
 - full list of filter keys
-- scope guidance (`adhoc` vs `global`)
+- CRUD flow and `scope` / `saved_only` usage
 - operator enums
 - copy/paste examples (e.g. Fortune 500 + US + version prefix)
 
@@ -126,7 +128,7 @@ Minimum test matrix:
 - query: default 30-day UTC window and custom windows
 - pagination: single-page and multi-page responses
 - filter usage: with and without `filter_id`
-- filter management: create/update-by-scope, list named filters, add/delete names
+- filter CRUD: list/create/get/update/delete, including `scope` and `saved_only`
 - no-data response behavior
 - retry on 429/5xx
 - schema drift tolerance for non-critical fields
