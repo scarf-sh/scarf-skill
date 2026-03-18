@@ -1,6 +1,6 @@
-# scarf-skill (private pre-release)
+# scarf-skill
 
-Private prep repo for the first public release of the Scarf skill.
+Scarf Data Assistant skill for Scarf analytics and insights-filter workflows.
 
 ## v1 contract (analytics-first with bounded filter CRUD)
 
@@ -27,7 +27,6 @@ Private prep repo for the first public release of the Scarf skill.
 - `RELEASE_CHECKLIST.md`
 - `LICENSE` (Apache-2.0)
 
-## Privacy/release posture
+## Release status
 
-- Keep repo private until first tag (`v0.1.0`) is cut.
-- Public release happens immediately after tag + repo rename validation.
+- Current release target: `0.2.0`

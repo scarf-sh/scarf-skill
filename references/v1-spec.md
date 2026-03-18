@@ -7,15 +7,14 @@ Enable a Scarf user to connect their own API token and complete common Scarf wor
 ## 2) Naming and packaging
 
 - Repo name: `scarf-skill`
-- Keep repo private until first public release process is complete.
-- First distribution targets:
+- Distribution targets:
   1. GitHub OSS repo
   2. ClawHub listing
   3. Docs page on `docs.scarf.sh`
 
-## 3) Reuse strategy for private MCP server
+## 3) Reuse strategy for MCP server
 
-Use MCP internals as inspiration, but avoid coupling v1 release to private MCP runtime.
+Use MCP internals as inspiration, but avoid coupling the released skill to the existing MCP runtime.
 
 Recommended architecture:
 
@@ -25,7 +24,7 @@ Recommended architecture:
 - `McpTransport` implementation (future)
 - `ScarfClient` (shared domain calls, pagination, retries, normalization)
 
-Result: public skill ships now; MCP can become a drop-in backend later.
+Result: skill ships now; MCP can become a drop-in backend later.
 
 ## 4) v1 scope (tight, useful)
 
@@ -161,6 +160,6 @@ scarf-skill/
 ## 11) Release plan
 
 Phase 1 (now): finalize capability spec + endpoint map + release docs
-Phase 2: private dogfood with 2-3 Scarf users
-Phase 3: lightweight SemVer tag `v0.1.0` (private)
-Phase 4: public OSS + ClawHub + docs launch page
+Phase 2: validate with internal team + 2-3 design partners
+Phase 3: lightweight SemVer tag `0.2.0`
+Phase 4: publish repo + ClawHub + docs launch page

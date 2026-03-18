@@ -1,6 +1,5 @@
-# v0.1.0 Release Checklist (lightweight SemVer tag)
+# 0.2.0 Release Checklist (lightweight SemVer tag)
 
-- [ ] Confirm repo is still private
 - [ ] Confirm docs align on:
   - `SCARF_API_TOKEN` required
   - UTC handling
@@ -8,11 +7,11 @@
   - org-required behavior
   - v1 default-`GET` plus bounded filter CRUD policy
   - `filter_id` usage guidance
+- [ ] Confirm release docs no longer describe the repo as pre-release/private-only
 - [ ] Confirm Apache-2.0 `LICENSE` exists
 - [ ] Confirm no stale/deprecated file references remain
 - [ ] Final sanity read of `SKILL.md` + references
-- [ ] Commit release-prep docs
-- [ ] Create lightweight tag: `git tag v0.1.0`
+- [ ] Create lightweight tag: `git tag 0.2.0`
 - [ ] Push commit + tag: `git push origin main --follow-tags`
 - [ ] Verify repo is named `scarf-skill`
 - [ ] Verify `SKILL.md` frontmatter is `name: scarf-skill`

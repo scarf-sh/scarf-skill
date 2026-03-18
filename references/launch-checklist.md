@@ -36,8 +36,8 @@
 - [ ] Apache-2.0 `LICENSE` present
 - [ ] `README.md` + `SKILL.md` + references align on auth/defaults/UTC/filter behavior
 - [ ] no deprecated/removed file references remain
-- [ ] lightweight release tag plan documented (`v0.1.0`)
-- [ ] repo remains private until first tag
+- [ ] lightweight release tag plan documented (`0.2.0`)
+- [ ] release docs no longer describe the repo as private/pre-release
 
 ## GTM / Feedback
 
