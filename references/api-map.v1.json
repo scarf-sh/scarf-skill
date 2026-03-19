@@ -36,6 +36,9 @@
       "getScheduledExports",
       "getScheduledExportsHistory"
     ],
+    "organization_download_feed_monitoring": [
+      "getOrganizationDownloadFeed"
+    ],
     "nl_qa_guardrails": [
       "getPackages",
       "getTrackingPixels",
@@ -73,6 +76,7 @@
     "exportCompanyPackageRollup",
     "exportCompanyPixelRollup",
     "exportEntityScarfScores",
+    "getOrganizationDownloadFeed",
     "getScheduledExports",
     "getScheduledExportsHistory"
   ]

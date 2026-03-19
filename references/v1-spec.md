@@ -28,7 +28,7 @@ Result: skill ships now; MCP can become a drop-in backend later.
 
 ## 4) v1 scope (tight, useful)
 
-Ship 7 core capabilities:
+Ship 8 core capabilities:
 
 1. **Org snapshot**
    - answer: high-level usage trend, top packages, top geos/orgs (as available)
@@ -38,11 +38,13 @@ Ship 7 core capabilities:
    - answer: where traffic/adoption is coming from
 4. **Lead/funnel summary**
    - answer: recent OQL/adoption stage changes
-5. **Export helper**
+5. **Organization download-feed monitoring**
+   - answer: what a specific company domain downloaded on a given day, with emphasis on security/threat-monitoring and real-time response workflows
+6. **Export helper**
    - answer: locate export jobs and summarize status
-6. **Natural-language Q&A with guardrails**
+7. **Natural-language Q&A with guardrails**
    - convert prompts into bounded API queries with explicit date ranges
-7. **Insights filter management**
+8. **Insights filter management**
    - answer: list/create/get/update/delete reusable or ad hoc filters and apply the returned `filter_id`
 
 Out of scope for v1:
@@ -100,6 +102,8 @@ Current status:
   - `DELETE /v2/insights/{owner}/filters/{filter_id}`
 - Keep user-defined variable writes out of v1 scope
 - Require explicit override for unusually broad windows (> 365 days)
+- For `getOrganizationDownloadFeed`, require both `domain` and a single explicit `date`
+- Treat `getOrganizationDownloadFeed` as a closed beta endpoint; if access appears unavailable, tell the user they may need Scarf to enable it and suggest Slack or `help@scarf.sh`
 
 ### Filter catalog + examples
 
