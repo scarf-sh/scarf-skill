@@ -12,7 +12,7 @@ Scarf Data Assistant skill for Scarf analytics and insights-filter workflows.
 - Allowed filter mutations: `createInsightsFilter`, `updateInsightsFilter`, `deleteInsightsFilter`
 - Optional narrowing: use `filter_id` when endpoint supports it, or manage filters through the public `/v2/insights/{owner}/filters` endpoints
 - Filter listing/creation params: `scope=adhoc|global`, plus `saved_only=true` when the user wants saved filters only
-- Scope guidance: prefer `global` for reusable saved filters and `adhoc` for temporary filters
+- Scope guidance: default new filters to `adhoc`; use `global` only when the user explicitly asks for it and confirms once
 
 ## Included files
 

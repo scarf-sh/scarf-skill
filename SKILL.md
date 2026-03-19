@@ -25,7 +25,8 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 - If no time range is provided, default to last 30 days: `[now-30d, now)` in UTC.
 - Use `filter_id` when available to narrow scope and reduce noisy output.
 - When listing or creating filters, use `scope=adhoc|global` as documented.
-- Prefer `global` scope for reusable saved filters and `adhoc` scope for temporary filters.
+- Default to `adhoc` scope for filter creation.
+- Use `global` scope only when the user explicitly asks for it, and confirm once before creating it because `global` filters affect org-wide analytics until removed.
 - Prefer small, composable calls and summarize results in user language.
 
 ## Startup flow
@@ -33,7 +34,7 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 1. Validate auth (`401/403` handling with clear next-step guidance).
 2. Resolve organization scope (`owner`) and optional package/entity target.
 3. Resolve date range (default 30-day UTC window if omitted).
-4. If the user is managing filters, choose the minimal CRUD operation (`list`, `create`, `get`, `update`, `delete`), plus `scope` and optional `saved_only` as needed.
+4. If the user is managing filters, choose the minimal CRUD operation (`list`, `create`, `get`, `update`, `delete`), default new filters to `scope=adhoc`, and require one confirmation before any `scope=global` create.
 5. Apply `filter_id` when an analytics endpoint supports it and a filter context is available.
 6. Run minimal API calls needed to answer the request.
 7. Return:
