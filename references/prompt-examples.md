@@ -55,15 +55,15 @@ Prompt:
 Expected behavior:
 - Ask one clarifying question (org/package + date range), then proceed
 
-## 7) Build a saved insights filter (examples)
+## 7) Build an insights filter (default scope behavior)
 
 Prompt:
-- "Create a saved filter for Fortune 500 companies in the United States on version 5.x and then use it for company rollup for last 7 days"
+- "Create a filter for Fortune 500 companies in the United States on version 5.x and then use it for company rollup for last 7 days"
 
 Expected behavior:
-- Choose `scope=global` because the user asked for a saved filter
+- Choose `scope=adhoc` by default because the user did not explicitly ask for `global`
 - Construct an `InsightsFilterInput` JSON payload
-- `POST /v2/insights/{owner}/filters?scope=global`
+- `POST /v2/insights/{owner}/filters?scope=adhoc`
 - Use returned `id` as `filter_id` on supported analytics calls
 
 Example payload:
@@ -76,7 +76,17 @@ Example payload:
 }
 ```
 
-## 8) List saved insights filters
+## 8) Explicit global scope requires confirmation
+
+Prompt:
+- "Create this filter as a global filter for the whole org"
+
+Expected behavior:
+- Ask one confirmation before creating the filter
+- Only after confirmation, call `POST /v2/insights/{owner}/filters?scope=global`
+- State clearly that the global filter will affect org-wide analytics until removed
+
+## 9) List saved insights filters
 
 Prompt:
 - "Show me our saved filters"
@@ -85,7 +95,7 @@ Expected behavior:
 - Call `GET /v2/insights/{owner}/filters?saved_only=true&scope=global`
 - Return concise filter names/ids and ask one follow-up question only if needed
 
-## 9) Update an existing filter
+## 10) Update an existing filter
 
 Prompt:
 - "Update filter `f_123` to only include Germany and France"
@@ -96,7 +106,7 @@ Expected behavior:
 - `PUT /v2/insights/{owner}/filters/{filter_id}`
 - Confirm the updated filter and its resulting scope or name if present
 
-## 10) Delete a temporary filter
+## 11) Delete a temporary filter
 
 Prompt:
 - "Delete the temporary filter we just created"

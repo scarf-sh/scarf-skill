@@ -19,8 +19,9 @@ Common query params:
 
 Skill guidance:
 
-- Prefer `global` scope when the user wants a reusable saved filter.
-- Prefer `adhoc` scope for temporary filters used only for the current analysis.
+- Default new filters to `adhoc` scope.
+- Use `global` scope only when the user explicitly asks for it.
+- Before creating a `global` filter, ask for one confirmation because it affects org-wide analytics until removed.
 - User-defined variable writes are documented by the API, but remain out of v1 skill scope.
 
 ## Payload shape
@@ -179,6 +180,6 @@ All supported keys in `InsightsFilterInput`:
 
 Apply flow:
 
-1. `POST /v2/insights/{owner}/filters?scope=global`
+1. `POST /v2/insights/{owner}/filters?scope=adhoc`
 2. Read returned `id`
 3. Call analytics endpoint with `?filter_id=<id>`

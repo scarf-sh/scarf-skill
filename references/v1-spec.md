@@ -91,6 +91,8 @@ Current status:
 - Use `filter_id` when endpoint supports it and filter context is provided
 - For filter CRUD, use `/v2/insights/{owner}/filters` and `/v2/insights/{owner}/filters/{filter_id}`
 - Use `scope=adhoc|global` when listing or creating filters
+- Default new filters to `scope=adhoc`
+- Use `scope=global` only when the user explicitly requests it, and require one confirmation before creating it because it affects org-wide analytics until removed
 - Use `saved_only=true` when the user explicitly asks for saved filters only
 - Approved filter mutations:
   - `POST /v2/insights/{owner}/filters`
