@@ -7,7 +7,7 @@ Notes:
 - Include only endpoints present in this file for skill v1.
 - Ignore internal-only fields unless they are documented for external users.
 
-Total operations: 78
+Total operations: 79
 
 ## Collections (5)
 
@@ -74,12 +74,13 @@ Total operations: 78
 | `getOrganizationPendingInvites` | `GET` | `/v2/organizations/{organization_name}/members/invites` | Get all pending invites for the organization |
 | `inviteMember` | `POST` | `/v2/organizations/{organization_name}/members/invites` | Invite a member who is not yet a scarf user by email |
 
-## Organizations (7)
+## Organizations (8)
 
 | operationId | Method | Path | Summary |
 |---|---|---|---|
 | `getOrganization` | `GET` | `/v2/organizations/{organization_name}` | Get organization |
 | `updateOrganization` | `PUT` | `/v2/organizations/{organization_name}` | Update organization |
+| `getOrganizationDownloadFeed` | `GET` | `/v2/organizations/{organization_name}/download-feed` | Get organization-wide download feed |
 | `getOrganizationMembers` | `GET` | `/v2/organizations/{organization_name}/members` | Get organization members |
 | `addOrganizationMember` | `POST` | `/v2/organizations/{organization_name}/members` | Add organization member |
 | `deleteOrganizationMember` | `DELETE` | `/v2/organizations/{organization_name}/members/{organization_member}` | Delete organization member |

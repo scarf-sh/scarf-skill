@@ -1,7 +1,7 @@
 ---
 name: scarf-skill
 user-invocable: true
-description: Scarf Data Assistant skill for AI agents to answer Scarf analytics questions and manage insights filters with a user-provided SCARF_API_TOKEN using Scarf public v2 API endpoints. Use when users ask for Scarf package/org metrics, funnel/lead summaries, export status, or bounded insights-filter CRUD workflows.
+description: Scarf Data Assistant skill for AI agents to answer Scarf analytics questions, threat-monitoring questions, and manage insights filters with a user-provided SCARF_API_TOKEN using Scarf public v2 API endpoints. Use when users ask for Scarf package/org metrics, funnel/lead summaries, organization download-feed monitoring, export status, or bounded insights-filter CRUD workflows.
 ---
 
 # Scarf Data Assistant
@@ -14,6 +14,9 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 - Never log, print, or persist raw tokens.
 - Require organization scope (`owner`) before query execution.
 - Default to read-oriented analytics flows.
+- Support organization download-feed reads for security/threat-monitoring use cases.
+- Treat the organization download feed as a closed beta capability.
+- If a user wants to use the organization download feed and does not clearly already have access, tell them they may need Scarf to enable access and point them to Slack or `help@scarf.sh`.
 - Allow insights-filter CRUD as the only v1 write surface.
 - v1 policy: execute `GET` operations plus the explicit insights-filter CRUD exceptions below.
 - Allowed non-`GET` operations:
@@ -35,9 +38,11 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 2. Resolve organization scope (`owner`) and optional package/entity target.
 3. Resolve date range (default 30-day UTC window if omitted).
 4. If the user is managing filters, choose the minimal CRUD operation (`list`, `create`, `get`, `update`, `delete`), default new filters to `scope=adhoc`, and require one confirmation before any `scope=global` create.
-5. Apply `filter_id` when an analytics endpoint supports it and a filter context is available.
-6. Run minimal API calls needed to answer the request.
-7. Return:
+5. If the user is asking about organization download-feed activity, threat monitoring, suspicious installs, or domain-specific download activity, use `GET /v2/organizations/{organization_name}/download-feed` with an explicit `domain` and `date`.
+6. If organization download-feed access fails because the endpoint is unavailable to the caller, say the feed is in closed beta and suggest reaching out to Scarf via Slack or `help@scarf.sh` for access.
+7. Apply `filter_id` when an analytics endpoint supports it and a filter context is available.
+8. Run minimal API calls needed to answer the request.
+9. Return:
    - direct answer,
    - key numbers,
    - assumptions,

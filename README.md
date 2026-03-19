@@ -1,6 +1,6 @@
 # scarf-skill
 
-Scarf Data Assistant skill for Scarf analytics and insights-filter workflows.
+Scarf Data Assistant skill for Scarf analytics, organization download-feed monitoring, and insights-filter workflows.
 
 ## v1 contract (analytics-first with bounded filter CRUD)
 

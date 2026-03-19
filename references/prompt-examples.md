@@ -115,3 +115,23 @@ Expected behavior:
 - Resolve the target `filter_id`
 - `DELETE /v2/insights/{owner}/filters/{filter_id}`
 - Confirm deletion and note that analytics calls must no longer reference that `filter_id`
+
+## 12) Organization download-feed threat check
+
+Prompt:
+- "Check the org download feed for `example.com` on 2026-03-17 and flag anything suspicious"
+
+Expected behavior:
+- Call `GET /v2/organizations/{organization_name}/download-feed?domain=example.com&date=2026-03-17`
+- Summarize key signals for security teams: unusual user agents, geo anomalies, bursty package pulls, and unknown/automated clients
+- Keep the output concise and action-oriented for human responders or downstream AI agents
+
+## 13) Closed beta handling for organization download feed
+
+Prompt:
+- "Use the organization download feed for our org"
+
+Expected behavior:
+- If feed access appears unavailable, clearly state this endpoint is currently closed beta
+- Tell the user to reach out to Scarf to enable access (e.g., Slack or `help@scarf.sh`)
+- Offer to continue with adjacent analytics endpoints while access is being enabled
