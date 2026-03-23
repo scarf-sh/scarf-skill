@@ -135,3 +135,14 @@ Expected behavior:
 - If feed access appears unavailable, clearly state this endpoint is currently closed beta
 - Tell the user to reach out to Scarf to enable access (e.g., Slack or `help@scarf.sh`)
 - Offer to continue with adjacent analytics endpoints while access is being enabled
+
+## 14) Explicit `download-feed` endpoint routing
+
+Prompt:
+- "check the `download-feed` endpoint in the scarf org for netflix.com, jan 9 2026"
+
+Expected behavior:
+- Recognize that the user explicitly named the endpoint and must not be rerouted to company events or company rollup
+- Call `GET /v2/organizations/scarf/download-feed?domain=netflix.com&date=2026-01-09`
+- Return the direct result and explicitly state which endpoint was used
+- If the endpoint errors, surface the exact missing/invalid query parameter instead of guessing another endpoint
