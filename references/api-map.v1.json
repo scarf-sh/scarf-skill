@@ -39,6 +39,9 @@
     "organization_download_feed_monitoring": [
       "getOrganizationDownloadFeed"
     ],
+    "org_download_feed": [
+      "getOrganizationDownloadFeed"
+    ],
     "nl_qa_guardrails": [
       "getPackages",
       "getTrackingPixels",

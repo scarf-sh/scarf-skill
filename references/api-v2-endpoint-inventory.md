@@ -87,6 +87,11 @@ Total operations: 79
 | `getOrganizationMember` | `GET` | `/v2/organizations/{organization_name}/members/{organization_member}` | Get organization member |
 | `updateOrganizationMemberRole` | `PUT` | `/v2/organizations/{organization_name}/members/{organization_member}` | Update member role |
 
+Note:
+- `GET /v2/organizations/{organization_name}/download-feed` is the endpoint to use when the user explicitly asks for `download-feed` or the org-wide download feed.
+- Required query params are `domain` and `date` (`YYYY-MM-DD`, UTC).
+- Do not substitute `/v2/companies/{owner}/{domain}/events` or `/v2/packages/{owner}/company-rollup` when the user explicitly asks for `download-feed`.
+
 ## Packages (27)
 
 | operationId | Method | Path | Summary |

@@ -13,6 +13,7 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 - Require `SCARF_API_TOKEN` before any API call.
 - Never log, print, or persist raw tokens.
 - Require organization scope (`owner`) before query execution.
+- Distinguish org-level `organization_name` routes from owner-scoped `{owner}` analytics routes; do not substitute one for the other.
 - Default to read-oriented analytics flows.
 - Support organization download-feed reads for security/threat-monitoring use cases.
 - Treat the organization download feed as a closed beta capability.
@@ -38,11 +39,15 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 2. Resolve organization scope (`owner`) and optional package/entity target.
 3. Resolve date range (default 30-day UTC window if omitted).
 4. If the user is managing filters, choose the minimal CRUD operation (`list`, `create`, `get`, `update`, `delete`), default new filters to `scope=adhoc`, and require one confirmation before any `scope=global` create.
-5. If the user is asking about organization download-feed activity, threat monitoring, suspicious installs, or domain-specific download activity, use `GET /v2/organizations/{organization_name}/download-feed` with an explicit `domain` and `date`.
-6. If organization download-feed access fails because the endpoint is unavailable to the caller, say the feed is in closed beta and suggest reaching out to Scarf via Slack or `help@scarf.sh` for access.
-7. Apply `filter_id` when an analytics endpoint supports it and a filter context is available.
-8. Run minimal API calls needed to answer the request.
-9. Return:
+5. Route to the exact endpoint family the user named:
+   - explicit `download-feed` / “org-wide download feed” → `GET /v2/organizations/{organization_name}/download-feed` with required query params `domain` and `date`
+   - company event feed / raw company events → `GET /v2/companies/{owner}/{domain}/events`
+   - company rollup / org-wide rollup summary → `GET /v2/packages/{owner}/company-rollup`
+6. If the user is asking about organization download-feed activity, threat monitoring, suspicious installs, or domain-specific download activity, use `GET /v2/organizations/{organization_name}/download-feed` with an explicit `domain` and `date`.
+7. If organization download-feed access fails because the endpoint is unavailable to the caller, say the feed is in closed beta and suggest reaching out to Scarf via Slack or `help@scarf.sh` for access.
+8. Apply `filter_id` when an analytics endpoint supports it and a filter context is available.
+9. Run minimal API calls needed to answer the request.
+10. Return:
    - direct answer,
    - key numbers,
    - assumptions,
@@ -54,6 +59,8 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 - Include caveats if data is partial, delayed, sampled, or filtered.
 - If a filter mutation succeeds, state exactly what changed and which `filter_id` or scope was affected.
 - If the API fails, provide exact reason plus one concrete recovery step.
+- When the user explicitly names an endpoint (for example `download-feed`), say which endpoint you used in the answer.
+- Do not silently replace `download-feed` with company events or company rollup.
 
 ## References
 
