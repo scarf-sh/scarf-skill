@@ -38,8 +38,9 @@ Ship 8 core capabilities:
    - answer: where traffic/adoption is coming from
 4. **Lead/funnel summary**
    - answer: recent OQL/adoption stage changes
-5. **Organization download-feed monitoring**
+5. **Dependency Radar monitoring**
    - answer: what a specific company domain downloaded on a given day, with emphasis on security/threat-monitoring and real-time response workflows
+   - also recognize legacy names: supply chain security feed, organization download feed, and org-wide download feed
 6. **Export helper**
    - answer: locate export jobs and summarize status
 7. **Natural-language Q&A with guardrails**
@@ -103,7 +104,9 @@ Current status:
 - Keep user-defined variable writes out of v1 scope
 - Require explicit override for unusually broad windows (> 365 days)
 - For `getOrganizationDownloadFeed`, require both `domain` and a single explicit `date`
-- Treat `getOrganizationDownloadFeed` as a closed beta endpoint; if access appears unavailable, tell the user they may need Scarf to enable it and suggest Slack or `help@scarf.sh`
+- Treat `getOrganizationDownloadFeed` as the Dependency Radar endpoint.
+- Treat "Dependency Radar", "dependency radar", "supply chain security feed", "organization download feed", and "org-wide download feed" as equivalent user-facing terms.
+- Treat Dependency Radar as an open beta capability; if access appears unavailable, suggest Slack or `help@scarf.sh`
 
 ### Filter catalog + examples
 

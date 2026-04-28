@@ -36,6 +36,12 @@
       "getScheduledExports",
       "getScheduledExportsHistory"
     ],
+    "dependency_radar": [
+      "getOrganizationDownloadFeed"
+    ],
+    "supply_chain_security_feed": [
+      "getOrganizationDownloadFeed"
+    ],
     "organization_download_feed_monitoring": [
       "getOrganizationDownloadFeed"
     ],

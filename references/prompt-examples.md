@@ -116,33 +116,38 @@ Expected behavior:
 - `DELETE /v2/insights/{owner}/filters/{filter_id}`
 - Confirm deletion and note that analytics calls must no longer reference that `filter_id`
 
-## 12) Organization download-feed threat check
+## 12) Dependency Radar threat check
 
 Prompt:
-- "Check the org download feed for `example.com` on 2026-03-17 and flag anything suspicious"
+- "Check Dependency Radar for `example.com` on 2026-03-17 and flag anything suspicious"
+- "Check the supply chain security feed for `example.com` on 2026-03-17"
+- "Check the org download feed for `example.com` on 2026-03-17"
 
 Expected behavior:
+- Treat Dependency Radar, supply chain security feed, and org download feed as aliases
 - Call `GET /v2/organizations/{organization_name}/download-feed?domain=example.com&date=2026-03-17`
 - Summarize key signals for security teams: unusual user agents, geo anomalies, bursty package pulls, and unknown/automated clients
 - Keep the output concise and action-oriented for human responders or downstream AI agents
 
-## 13) Closed beta handling for organization download feed
+## 13) Open beta handling for Dependency Radar
 
 Prompt:
-- "Use the organization download feed for our org"
+- "Use Dependency Radar for our org"
+- "Use the supply chain security feed for our org"
 
 Expected behavior:
-- If feed access appears unavailable, clearly state this endpoint is currently closed beta
-- Tell the user to reach out to Scarf to enable access (e.g., Slack or `help@scarf.sh`)
+- If feed access appears unavailable, clearly state this endpoint is currently open beta
+- Tell the user to reach out to Scarf for help (e.g., Slack or `help@scarf.sh`)
 - Offer to continue with adjacent analytics endpoints while access is being enabled
 
 ## 14) Explicit `download-feed` endpoint routing
 
 Prompt:
 - "check the `download-feed` endpoint in the scarf org for netflix.com, jan 9 2026"
+- "check dependency radar in the scarf org for netflix.com, jan 9 2026"
 
 Expected behavior:
-- Recognize that the user explicitly named the endpoint and must not be rerouted to company events or company rollup
+- Recognize that Dependency Radar maps to the `download-feed` endpoint and must not be rerouted to company events or company rollup
 - Call `GET /v2/organizations/scarf/download-feed?domain=netflix.com&date=2026-01-09`
 - Return the direct result and explicitly state which endpoint was used
 - If the endpoint errors, surface the exact missing/invalid query parameter instead of guessing another endpoint

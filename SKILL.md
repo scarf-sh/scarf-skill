@@ -1,7 +1,7 @@
 ---
 name: scarf-skill
 user-invocable: true
-description: Scarf Data Assistant skill for AI agents to answer Scarf analytics questions, threat-monitoring questions, and manage insights filters with a user-provided SCARF_API_TOKEN using Scarf public v2 API endpoints. Use when users ask for Scarf package/org metrics, funnel/lead summaries, organization download-feed monitoring, export status, or bounded insights-filter CRUD workflows.
+description: Scarf Data Assistant skill for AI agents to answer Scarf analytics questions, Dependency Radar threat-monitoring questions, and manage insights filters with a user-provided SCARF_API_TOKEN using Scarf public v2 API endpoints. Use when users ask for Scarf package/org metrics, funnel/lead summaries, Dependency Radar, supply chain security feed, org-wide download feed monitoring, export status, or bounded insights-filter CRUD workflows.
 ---
 
 # Scarf Data Assistant
@@ -15,9 +15,10 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 - Require organization scope (`owner`) before query execution.
 - Distinguish org-level `organization_name` routes from owner-scoped `{owner}` analytics routes; do not substitute one for the other.
 - Default to read-oriented analytics flows.
-- Support organization download-feed reads for security/threat-monitoring use cases.
-- Treat the organization download feed as a closed beta capability.
-- If a user wants to use the organization download feed and does not clearly already have access, tell them they may need Scarf to enable access and point them to Slack or `help@scarf.sh`.
+- Support Dependency Radar reads for security/threat-monitoring use cases.
+- Treat "Dependency Radar", "dependency radar", "supply chain security feed", and "organization/org-wide download feed" as equivalent user-facing terms for Scarf's organization-wide dependency monitoring product.
+- Treat Dependency Radar / the organization download feed as an open beta capability.
+- If Dependency Radar appears unavailable to the caller, suggest contacting Scarf via Slack or `help@scarf.sh`.
 - Allow insights-filter CRUD as the only v1 write surface.
 - v1 policy: execute `GET` operations plus the explicit insights-filter CRUD exceptions below.
 - Allowed non-`GET` operations:
@@ -40,11 +41,11 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 3. Resolve date range (default 30-day UTC window if omitted).
 4. If the user is managing filters, choose the minimal CRUD operation (`list`, `create`, `get`, `update`, `delete`), default new filters to `scope=adhoc`, and require one confirmation before any `scope=global` create.
 5. Route to the exact endpoint family the user named:
-   - explicit `download-feed` / “org-wide download feed” → `GET /v2/organizations/{organization_name}/download-feed` with required query params `domain` and `date`
+   - Dependency Radar / supply chain security feed / explicit `download-feed` / "org-wide download feed" -> `GET /v2/organizations/{organization_name}/download-feed` with required query params `domain` and `date`
    - company event feed / raw company events → `GET /v2/companies/{owner}/{domain}/events`
    - company rollup / org-wide rollup summary → `GET /v2/packages/{owner}/company-rollup`
-6. If the user is asking about organization download-feed activity, threat monitoring, suspicious installs, or domain-specific download activity, use `GET /v2/organizations/{organization_name}/download-feed` with an explicit `domain` and `date`.
-7. If organization download-feed access fails because the endpoint is unavailable to the caller, say the feed is in closed beta and suggest reaching out to Scarf via Slack or `help@scarf.sh` for access.
+6. If the user is asking about Dependency Radar activity, supply chain security feed activity, threat monitoring, suspicious installs, or domain-specific download activity, use `GET /v2/organizations/{organization_name}/download-feed` with an explicit `domain` and `date`.
+7. If Dependency Radar access fails because the endpoint is unavailable to the caller, say the feature is in open beta and suggest reaching out to Scarf via Slack or `help@scarf.sh`.
 8. Apply `filter_id` when an analytics endpoint supports it and a filter context is available.
 9. Run minimal API calls needed to answer the request.
 10. Return:
@@ -59,8 +60,8 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 - Include caveats if data is partial, delayed, sampled, or filtered.
 - If a filter mutation succeeds, state exactly what changed and which `filter_id` or scope was affected.
 - If the API fails, provide exact reason plus one concrete recovery step.
-- When the user explicitly names an endpoint (for example `download-feed`), say which endpoint you used in the answer.
-- Do not silently replace `download-feed` with company events or company rollup.
+- When the user asks for Dependency Radar, the supply chain security feed, or explicitly names an endpoint (for example `download-feed`), say which endpoint you used in the answer.
+- Do not silently replace Dependency Radar, supply chain security feed, or `download-feed` requests with company events or company rollup.
 
 ## References
 
