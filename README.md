@@ -1,6 +1,8 @@
 # scarf-skill
 
-Scarf Data Assistant skill for Scarf analytics, organization download-feed monitoring, and insights-filter workflows.
+Scarf Data Assistant skill for Scarf analytics, Dependency Radar monitoring, and insights-filter workflows.
+
+Product naming note: Scarf's organization-wide download feed is now called **Dependency Radar**. The skill treats "Dependency Radar", "dependency radar", "supply chain security feed", and "organization/org-wide download feed" as equivalent user-facing terms for the same open-beta dependency monitoring capability.
 
 ## v1 contract (analytics-first with bounded filter CRUD)
 
@@ -11,6 +13,7 @@ Scarf Data Assistant skill for Scarf analytics, organization download-feed monit
 - API scope: `GET` by default, plus limited insights-filter CRUD
 - Allowed filter mutations: `createInsightsFilter`, `updateInsightsFilter`, `deleteInsightsFilter`
 - Optional narrowing: use `filter_id` when endpoint supports it, or manage filters through the public `/v2/insights/{owner}/filters` endpoints
+- Dependency Radar: route Dependency Radar, supply chain security feed, and org-wide download-feed requests to `getOrganizationDownloadFeed`
 - Filter listing/creation params: `scope=adhoc|global`, plus `saved_only=true` when the user wants saved filters only
 - Scope guidance: default new filters to `adhoc`; use `global` only when the user explicitly asks for it and confirms once
 

@@ -16,6 +16,7 @@
   - `updateInsightsFilter`
   - `deleteInsightsFilter`
 - `getUserDefinedVariables` and `setUserDefinedVariables` are documented public endpoints, but user-defined variable writes remain outside the v1 allowlist.
+- `getOrganizationDownloadFeed` is allowed for Dependency Radar requests, including legacy user wording such as supply chain security feed and org-wide download feed.
 - If a user asks for create/update/delete actions outside the approved filter CRUD endpoints, respond that v1 supports analytics plus limited insights-filter management only.
 
 ## Why this policy
