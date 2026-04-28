@@ -2,8 +2,6 @@
 
 Scarf Data Assistant skill for Scarf analytics, Dependency Radar monitoring, and insights-filter workflows.
 
-Product naming note: Scarf's organization-wide download feed is now called **Dependency Radar**. The skill treats "Dependency Radar", "dependency radar", "supply chain security feed", and "organization/org-wide download feed" as equivalent user-facing terms for the same open-beta dependency monitoring capability.
-
 ## v1 contract (analytics-first with bounded filter CRUD)
 
 - Auth env var: `SCARF_API_TOKEN` (required)
