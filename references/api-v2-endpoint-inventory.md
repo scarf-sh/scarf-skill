@@ -7,6 +7,21 @@ Notes:
 - Include only endpoints present in this file for skill v1.
 - Ignore internal-only fields unless they are documented for external users.
 
+## Pagination (applies to all list endpoints)
+
+List endpoints (`GET` operations that return a collection — packages, routes, tracking pixels, filters, exports, members, imports, etc.) silently truncate to **10 results per page** by default and return **no pagination metadata**:
+
+- No `Link` header.
+- No `total`, `count`, `next`, or `has_more` field in the response body.
+- Some endpoints wrap results in `{"results": [...]}`; others (notably `/routes`) return a bare JSON array. Neither shape carries pagination state.
+
+**Implication:** a 10-row response is indistinguishable from a complete result set. Treating it as complete is a real footgun — for example, `GET /v2/packages/{owner}/{package_id}/routes` on a package with 23 configured routes returns only the first 10, hiding routes that genuinely exist.
+
+**Required behavior:**
+- Always pass an explicit `?per_page=N` on list calls. Default to a value large enough to cover realistic result sets (e.g. `per_page=200`).
+- If exactly `per_page` rows come back, do not assume that's the full list — page forward with `?page=2`, `?page=3`, … until a short page is returned.
+- When summarizing results to the user, never imply completeness from a single page; if you didn't paginate to exhaustion, say so.
+
 Total operations: 79
 
 ## Collections (5)

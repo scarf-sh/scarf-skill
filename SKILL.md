@@ -32,6 +32,7 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 - Default to `adhoc` scope for filter creation.
 - Use `global` scope only when the user explicitly asks for it, and confirm once before creating it because `global` filters affect org-wide analytics until removed.
 - Prefer small, composable calls and summarize results in user language.
+- All list endpoints default to 10 results per page and return no pagination metadata (no `Link` header, no `total`/`next` in the body). Always pass `?per_page=N` large enough to cover the expected result set, or paginate explicitly with `?page=` until a short page is returned. Treating the default response as the full list is a known footgun — see `references/api-v2-endpoint-inventory.md` for details.
 
 ## Startup flow
 
