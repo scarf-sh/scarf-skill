@@ -2,6 +2,8 @@
 
 Published spec: `https://api.scarf.sh/static/api-v2.yaml`
 
+Aggregation export exception: use public v3 `GET /v3/insights/{owner}/aggregations/export` for aggregate analytics. Do not use the legacy v2 `GET /v2/packages/{owner}/aggregates` route in new skill flows.
+
 Notes:
 - Inventory generated from the published v2 OpenAPI spec.
 - Include only endpoints present in this file for skill v1.
@@ -102,7 +104,8 @@ Note:
 | `getScheduledExportsHistory` | `GET` | `/v2/exports/{owner}/schedule-export-history` | Retrieve recent scheduled exports history |
 | `getPackages` | `GET` | `/v2/packages/{owner}` | List packages |
 | `createPackage` | `POST` | `/v2/packages/{owner}` | Creates a new package |
-| `exportEntityAggregates` | `GET` | `/v2/packages/{owner}/aggregates` | Export aggregates |
+| `exportEntityAggregationsV3` | `GET` | `/v3/insights/{owner}/aggregations/export` | Export aggregates (v3 replacement) |
+| `exportEntityAggregates` | `GET` | `/v2/packages/{owner}/aggregates` | Deprecated legacy aggregate export; do not use for skill flows |
 | `exportEntityPackageEvents` | `GET` | `/v2/packages/{owner}/events` | Export all package events |
 | `getPackagesOverview` | `GET` | `/v2/packages/{owner}/overview` | List packages overview |
 | `deletePackage` | `DELETE` | `/v2/packages/{owner}/{package_id}` | Deletes a package |

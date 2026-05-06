@@ -4,6 +4,7 @@
 
 - v1 is analytics-first with bounded insights-filter CRUD.
 - v1 executes `GET` operations by default.
+- Aggregate analytics must use `GET /v3/insights/{owner}/aggregations/export`; the legacy `GET /v2/packages/{owner}/aggregates` route is not allowed for new skill flows.
 - Only the approved insights-filter mutations are allowed outside `GET`.
 - All other non-`GET` operations are blocked by default.
 
@@ -16,6 +17,7 @@
   - `updateInsightsFilter`
   - `deleteInsightsFilter`
 - `getUserDefinedVariables` and `setUserDefinedVariables` are documented public endpoints, but user-defined variable writes remain outside the v1 allowlist.
+- `exportEntityAggregationsV3` is allowed for aggregate analytics and replaces the legacy v2 aggregate export operation.
 - `getOrganizationDownloadFeed` is allowed for Dependency Radar requests, including legacy user wording such as supply chain security feed and org-wide download feed.
 - If a user asks for create/update/delete actions outside the approved filter CRUD endpoints, respond that v1 supports analytics plus limited insights-filter management only.
 
