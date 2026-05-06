@@ -2,7 +2,9 @@
   "version": "v1-draft",
   "policy": {
     "default": "deny",
-    "allowMethods": ["GET"],
+    "allowMethods": [
+      "GET"
+    ],
     "nonGetExceptions": [
       "createInsightsFilter",
       "updateInsightsFilter",
@@ -19,7 +21,7 @@
       "getPackageByName",
       "getPackageById",
       "exportPackageEvents",
-      "exportEntityAggregates"
+      "exportEntityAggregationsV3"
     ],
     "top_referrers_and_acquisition": [
       "exportEntityPackageEvents",
@@ -73,7 +75,7 @@
     "getPackagesOverview",
     "getPackageByName",
     "getPackageById",
-    "exportEntityAggregates",
+    "exportEntityAggregationsV3",
     "exportEntityPackageEvents",
     "exportPackageEvents",
     "getTrackingPixels",
@@ -88,5 +90,13 @@
     "getOrganizationDownloadFeed",
     "getScheduledExports",
     "getScheduledExportsHistory"
-  ]
+  ],
+  "operations": {
+    "exportEntityAggregationsV3": {
+      "method": "GET",
+      "path": "/v3/insights/{owner}/aggregations/export",
+      "replaces": "exportEntityAggregates",
+      "legacyPath": "/v2/packages/{owner}/aggregates"
+    }
+  }
 }

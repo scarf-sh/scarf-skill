@@ -1,7 +1,7 @@
 ---
 name: scarf-skill
 user-invocable: true
-description: Scarf Data Assistant skill for AI agents to answer Scarf analytics questions, Dependency Radar threat-monitoring questions, and manage insights filters with a user-provided SCARF_API_TOKEN using Scarf public v2 API endpoints. Use when users ask for Scarf package/org metrics, funnel/lead summaries, Dependency Radar, supply chain security feed, org-wide download feed monitoring, export status, or bounded insights-filter CRUD workflows.
+description: Scarf Data Assistant skill for AI agents to answer Scarf analytics questions, Dependency Radar threat-monitoring questions, and manage insights filters with a user-provided SCARF_API_TOKEN using Scarf public API endpoints. Use when users ask for Scarf package/org metrics, v3 aggregation exports, funnel/lead summaries, Dependency Radar, supply chain security feed, org-wide download feed monitoring, export status, or bounded insights-filter CRUD workflows.
 ---
 
 # Scarf Data Assistant
@@ -15,6 +15,7 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 - Require organization scope (`owner`) before query execution.
 - Distinguish org-level `organization_name` routes from owner-scoped `{owner}` analytics routes; do not substitute one for the other.
 - Default to read-oriented analytics flows.
+- Use v3 aggregation export (`GET /v3/insights/{owner}/aggregations/export`) for aggregate analytics; do not use the legacy v2 package aggregate export route.
 - Support Dependency Radar reads for security/threat-monitoring use cases.
 - Treat "Dependency Radar", "dependency radar", "supply chain security feed", and "organization/org-wide download feed" as equivalent user-facing terms for Scarf's organization-wide dependency monitoring product.
 - Treat Dependency Radar / the organization download feed as an open beta capability.
@@ -41,6 +42,7 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 3. Resolve date range (default 30-day UTC window if omitted).
 4. If the user is managing filters, choose the minimal CRUD operation (`list`, `create`, `get`, `update`, `delete`), default new filters to `scope=adhoc`, and require one confirmation before any `scope=global` create.
 5. Route to the exact endpoint family the user named:
+   - aggregation exports / aggregate analytics / package or org aggregate downloads → `GET /v3/insights/{owner}/aggregations/export`
    - Dependency Radar / supply chain security feed / explicit `download-feed` / "org-wide download feed" -> `GET /v2/organizations/{organization_name}/download-feed` with required query params `domain` and `date`
    - company event feed / raw company events → `GET /v2/companies/{owner}/{domain}/events`
    - company rollup / org-wide rollup summary → `GET /v2/packages/{owner}/company-rollup`
@@ -62,12 +64,13 @@ Use this skill to translate user intent into safe, reliable Scarf API calls and 
 - If the API fails, provide exact reason plus one concrete recovery step.
 - When the user asks for Dependency Radar, the supply chain security feed, or explicitly names an endpoint (for example `download-feed`), say which endpoint you used in the answer.
 - Do not silently replace Dependency Radar, supply chain security feed, or `download-feed` requests with company events or company rollup.
+- When answering from aggregate exports, say that you used `GET /v3/insights/{owner}/aggregations/export`.
 
 ## References
 
 - Read `references/v1-spec.md` for architecture, scope, defaults, and API strategy.
 - Read `references/v1-allowlist.md` for the execution allowlist and insights-filter CRUD exceptions.
-- Read `references/api-v2-endpoint-inventory.md` for the public v2 endpoint catalog derived from the published OpenAPI spec.
+- Read `references/api-v2-endpoint-inventory.md` for the public endpoint catalog derived from the published OpenAPI specs, including the v3 aggregation export replacement for legacy v2 aggregates.
 - Read `references/api-map.v1.json` for v1 capability-to-endpoint mapping.
 - Read `references/filter-catalog.md` for supported filter keys, scope usage, and payload examples.
 - Read `references/launch-checklist.md` before release.

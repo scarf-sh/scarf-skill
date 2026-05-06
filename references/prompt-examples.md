@@ -151,3 +151,16 @@ Expected behavior:
 - Call `GET /v2/organizations/scarf/download-feed?domain=netflix.com&date=2026-01-09`
 - Return the direct result and explicitly state which endpoint was used
 - If the endpoint errors, surface the exact missing/invalid query parameter instead of guessing another endpoint
+
+
+## 15) Aggregate export routing
+
+Prompt:
+- "Export aggregate downloads for our packages last month"
+- "Use aggregations export for the scarf org from 2026-04-01 to 2026-05-01"
+
+Expected behavior:
+- Route aggregate analytics to `GET /v3/insights/{owner}/aggregations/export`
+- Do not call the legacy `GET /v2/packages/{owner}/aggregates` endpoint
+- Include the date window and any selected dimensions/filters in the answer
+- State that the v3 aggregation export endpoint was used

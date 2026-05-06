@@ -72,7 +72,7 @@ Error mapping (minimum):
 
 ## 6) API strategy
 
-Use the published v2 OpenAPI spec (`https://api.scarf.sh/static/api-v2.yaml`) as source of truth for public API coverage. For filter fields and operator guidance, prefer the Scarf-provided `InsightsFilterInput` description in `references/filter-catalog.md` until the public docs catch up.
+Use the published OpenAPI specs as source of truth for public API coverage. Most v1 skill flows use the public v2 spec (`https://api.scarf.sh/static/api-v2.yaml`), but aggregate analytics must use the v3 aggregation export endpoint (`GET /v3/insights/{owner}/aggregations/export`) instead of the legacy v2 package aggregate export route. For filter fields and operator guidance, prefer the Scarf-provided `InsightsFilterInput` description in `references/filter-catalog.md` until the public docs catch up.
 
 Implementation approach:
 - maintain internal endpoint map: `references/api-map.v1.json`
@@ -84,7 +84,7 @@ Implementation approach:
   - primary response fields
 
 Current status:
-- endpoint inventory: `references/api-v2-endpoint-inventory.md`
+- endpoint inventory: `references/api-v2-endpoint-inventory.md` with a v3 aggregation-export replacement note
 - capability mapping + default-deny allowlist: `references/api-map.v1.json`
 
 ## 7) Query defaults and filters
@@ -92,6 +92,7 @@ Current status:
 - Timezone: **UTC** for all normalization and output labels
 - Default date window (if omitted): last **30 days** `[now-30d, now)` in UTC
 - Use `filter_id` when endpoint supports it and filter context is provided
+- Use `GET /v3/insights/{owner}/aggregations/export` for aggregation exports and aggregate analytics; do not call `GET /v2/packages/{owner}/aggregates`
 - For filter CRUD, use `/v2/insights/{owner}/filters` and `/v2/insights/{owner}/filters/{filter_id}`
 - Use `scope=adhoc|global` when listing or creating filters
 - Default new filters to `scope=adhoc`

@@ -1,6 +1,6 @@
 # Insights Filters Catalog (v1)
 
-Canonical source for endpoints: published public v2 OpenAPI spec at `https://api.scarf.sh/static/api-v2.yaml`.
+Canonical source for endpoints: published public OpenAPI specs. Filter management remains on the public v2 API (`https://api.scarf.sh/static/api-v2.yaml`); aggregate analytics use v3 `GET /v3/insights/{owner}/aggregations/export` rather than legacy v2 aggregates.
 
 Canonical source for filter fields and operator guidance: Scarf-provided `InsightsFilterInput` description shared on 2026-03-18, to be preferred until the public docs are updated.
 
