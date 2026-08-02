@@ -169,16 +169,28 @@ cases = [
     map["source"]["legacyUrl"] = "https://example.com/legacy.yaml"
     inventory
   end],
-  ["policy parameter rename", "policy-relevant request schemas changed", lambda do |_map, spec, inventory|
+  ["policy parameter rename", "request schemas changed", lambda do |_map, spec, inventory|
     spec.dig("components", "parameters", "insights_filter_scope")["name"] = "visibility"
     inventory
   end],
-  ["policy parameter schema drift", "policy-relevant request schemas changed", lambda do |_map, spec, inventory|
+  ["policy parameter schema drift", "request schemas changed", lambda do |_map, spec, inventory|
     spec.dig("components", "schemas", "FilterScope")["default"] = "global"
     inventory
   end],
-  ["referenced request-body drift", "policy-relevant request schemas changed", lambda do |_map, spec, inventory|
+  ["referenced request-body drift", "request schemas changed", lambda do |_map, spec, inventory|
     spec.dig("components", "schemas", "CreateCollection", "required").delete("pattern")
+    inventory
+  end],
+  ["Dependency Radar parameter drift", "request schemas changed", lambda do |_map, spec, inventory|
+    spec.dig("paths", "/v2/organizations/{organization_name}/download-feed", "get", "parameters").find { |parameter| parameter["name"] == "domain" }["name"] = "hostname"
+    inventory
+  end],
+  ["pagination parameter drift", "request schemas changed", lambda do |_map, spec, inventory|
+    spec.dig("components", "parameters", "per_page", "schema")["maximum"] = 10
+    inventory
+  end],
+  ["annotation-named request property drift", "request schemas changed", lambda do |_map, spec, inventory|
+    spec.dig("components", "schemas", "UpdateOrganization", "properties", "description")["maxLength"] = 1
     inventory
   end],
   ["source URL drift", "source URL changed", lambda do |map, _spec, inventory|
