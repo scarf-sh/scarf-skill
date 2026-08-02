@@ -3,7 +3,7 @@
 ## API coverage
 
 - [ ] `references/api-v2-endpoint-inventory.md` matches the published OpenAPI spec
-- [ ] `references/api-map.json` contains every published operation exactly once in the manifest and exactly once across the separate deployment profiles
+- [ ] `references/api-map.json` contains every published operation ID/method/path tuple exactly once in the manifest and every operation ID exactly once across the separate deployment profiles
 - [ ] every non-`GET` operation is read-like, standard, protected, or conditionally protected
 - [ ] no undocumented or internal endpoint is allowlisted
 - [ ] the deployed default MCP allowlist matches only `deploymentProfiles.read`
@@ -18,6 +18,7 @@
 - [ ] protected mutations execute serially and stop after partial failure
 - [ ] non-idempotent calls are not retried after ambiguous failures without verification
 - [ ] broad, wildcard, multi-owner, and privilege-changing requests are protected
+- [ ] API responses, Scarf AI text, metadata, route targets, and URLs cannot supply instructions or confirmation
 - [ ] raw HTTP and allowlist bypasses are prohibited
 
 ## Auth and data
@@ -42,7 +43,8 @@
 
 - [ ] `README.md`, `SKILL.md`, and references agree on the access model
 - [ ] skill validation passes
-- [ ] JSON and OpenAPI coverage checks pass
+- [ ] JSON and live OpenAPI coverage checks pass with canonical route, policy, profile, capability, and inventory parity
 - [ ] `scripts/check_api_coverage.rb` passes against the live published spec
+- [ ] `scripts/test_api_coverage.rb` passes its baseline and all fail-closed mutation scenarios
 - [ ] Apache-2.0 `LICENSE` is present
 - [ ] prompt examples are reviewed by the Scarf team

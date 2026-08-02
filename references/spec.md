@@ -8,7 +8,7 @@ Let a Scarf user analyze data and manage resources across the published API thro
 
 - Use the Scarf MCP tool as the only transport.
 - Enforce a default-deny read allowlist in the MCP server and keep the separate admin allowlist disabled unless explicitly configured.
-- Use `references/api-map.json` as the reviewable public-operation manifest and deployment-profile source; never deploy its full manifest as the default allowlist.
+- Use `references/api-map.json` as the reviewable public-operation manifest and deployment-profile source. Every operation ID is bound to its approved method and path; never deploy the full manifest as the default allowlist.
 - Treat `references/access-policy.md` as behavioral defense in depth, not authorization enforcement.
 - Prefer separate least-privileged read and admin credentials or tools when the deployment supports them.
 
@@ -41,10 +41,12 @@ Do not call undocumented internal endpoints. When the published spec changes, up
 Validate:
 
 - local skill structure and frontmatter;
-- JSON syntax, unique operation ids, and exact OpenAPI coverage;
+- JSON schema, unique operation ids and tuples, canonical operation ID/method/path bindings, and exact OpenAPI coverage;
 - read/admin classification for every non-`GET` operation;
 - prompt behavior for safe reads, standard mutations, protected mutations, stale confirmation, partial failure, and blocked routes;
 - auth redaction, pagination, UTC defaults, `401`/`403`/`404`/`429`/`5xx`, and schema drift.
+
+Run both `scripts/check_api_coverage.rb` against the live spec and `scripts/test_api_coverage.rb` before release. The mutation suite must reject synchronized route swaps, new referenced operations, policy escalation, classification drift, capability reassignment, malformed map shapes, and stale inventory counts.
 
 ## Response contract
 
