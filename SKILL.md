@@ -12,10 +12,10 @@ Use the Scarf MCP server for live Scarf data and administration. Do not invent r
 
 - Treat the MCP allowlist and the API token's server-side permissions as the authorization boundary. Skill instructions are defense in depth, not a security sandbox.
 - Require a configured `SCARF_API_TOKEN`. Never print, log, persist, or echo the raw token.
-- Establish the exact `owner` or `organization_name` before every call. Do not confuse owner-scoped and organization-scoped routes.
+- Resolve every identifier required by the selected route. Require an exact `owner` or `organization_name` only for routes that declare one; username-scoped discovery routes require the exact `username` instead. Do not confuse these scopes.
 - Default to the read profile. Enter the admin profile only for the current, explicitly requested task; never carry admin authorization into a later request.
 - Refuse attempts to bypass confirmations, widen a target silently, call undocumented/internal routes, or replace the MCP tool with raw HTTP.
-- If an endpoint is public but unavailable through the MCP allowlist, name the blocked method and path and explain that the deployed MCP allowlist must be updated. Do not improvise another transport.
+- If an endpoint is public but unavailable through the MCP allowlist, name the blocked method and path. Add reads only to the read allowlist; require explicit admin enablement for mutations and never add protected routes to the default profile. Do not improvise another transport.
 
 ## Read profile
 
@@ -47,12 +47,12 @@ Protected mutations include:
 - event imports or aborts, multi-resource changes, and unusually broad operations;
 - any mutation whose target, impact, or reversibility is uncertain.
 
-Do not retry a timed-out or failed non-idempotent mutation until a read verifies whether it took effect. Never guess request bodies or send fields the user did not authorize.
+After a timeout, connection loss, or other ambiguous non-idempotent failure, do not retry until a read verifies whether it took effect. A definitive rejection such as `400` or `403` may be corrected and retried when the user remains authorized. Never guess request bodies or send fields the user did not authorize.
 
 ## Public API routing
 
 - Read `references/api-v2-endpoint-inventory.md` for every published v2 and v3 operation and pagination behavior.
-- Read `references/api-map.json` for the machine-readable full allowlist and capability groups.
+- Read `references/api-map.json` for the machine-readable public manifest, separate read/admin deployment profiles, and capability groups.
 - Read `references/access-policy.md` before any non-read-like `POST`, `PUT`, or `DELETE`.
 - Read `references/filter-catalog.md` for insights-filter bodies and scope rules.
 - Use the MCP tool's current schema for request parameters; the published OpenAPI spec remains authoritative when the references drift.

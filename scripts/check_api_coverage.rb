@@ -28,35 +28,51 @@ map = JSON.parse(File.read(map_path))
 spec = YAML.load(read_source(spec_source))
 
 operations = []
-(spec["paths"] || {}).each_value do |path_item|
+(spec["paths"] || {}).each do |path, path_item|
   path_item.each do |method, operation|
     next unless HTTP_METHODS.include?(method)
 
-    operations << [operation.fetch("operationId"), method.upcase]
+    operations << [operation.fetch("operationId"), method.upcase, path]
   end
 end
 
 operation_ids = operations.map(&:first)
-inventory_operation_ids = File.readlines(inventory_path).each_with_object([]) do |line, ids|
-  match = line.match(/^\| `([^`]+)` \| `(#{HTTP_METHODS.map(&:upcase).join("|")})` \|/)
-  ids << match[1] if match
+inventory_operations = File.readlines(inventory_path).each_with_object([]) do |line, entries|
+  match = line.match(/^\| `([^`]+)` \| `(#{HTTP_METHODS.map(&:upcase).join("|")})` \| `([^`]+)` \|/)
+  entries << [match[1], match[2], match[3]] if match
 end
-allowlist = map.fetch("explicitAllowlist")
+inventory_operation_ids = inventory_operations.map(&:first)
+manifest = map.fetch("publicOperationManifest")
+read_profile = map.dig("deploymentProfiles", "read")
+admin_profile = map.dig("deploymentProfiles", "admin")
 policy = map.fetch("policy")
-classified_writes = policy.fetch("readLikePost") +
-                    policy.fetch("standardMutations") +
-                    policy.fetch("protectedMutations")
-non_get_operations = operations.reject { |_id, method| method == "GET" }.map(&:first)
+read_like_posts = policy.fetch("readLikePost")
+standard_mutations = policy.fetch("standardMutations")
+protected_mutations = policy.fetch("protectedMutations")
+classified_writes = read_like_posts + standard_mutations + protected_mutations
+non_get_operations = operations.reject { |_id, method, _path| method == "GET" }.map(&:first)
+expected_read_profile = operations.select { |_id, method, _path| method == "GET" }.map(&:first) + read_like_posts
+expected_admin_profile = standard_mutations + protected_mutations
 capability_operations = map.fetch("capabilities").values.flatten.uniq
 
 errors = []
 errors << "source count is #{operation_ids.length}, map declares #{map.dig("source", "operationCount")}" unless operation_ids.length == map.dig("source", "operationCount")
-errors << "allowlist has duplicates: #{duplicates(allowlist).join(", ")}" unless duplicates(allowlist).empty?
-errors << "allowlist is missing: #{(operation_ids - allowlist).join(", ")}" unless (operation_ids - allowlist).empty?
-errors << "allowlist has unknown operations: #{(allowlist - operation_ids).join(", ")}" unless (allowlist - operation_ids).empty?
+errors << "manifest has duplicates: #{duplicates(manifest).join(", ")}" unless duplicates(manifest).empty?
+errors << "manifest is missing: #{(operation_ids - manifest).join(", ")}" unless (operation_ids - manifest).empty?
+errors << "manifest has unknown operations: #{(manifest - operation_ids).join(", ")}" unless (manifest - operation_ids).empty?
 errors << "inventory has duplicates: #{duplicates(inventory_operation_ids).join(", ")}" unless duplicates(inventory_operation_ids).empty?
-errors << "inventory is missing: #{(operation_ids - inventory_operation_ids).join(", ")}" unless (operation_ids - inventory_operation_ids).empty?
-errors << "inventory has unknown operations: #{(inventory_operation_ids - operation_ids).join(", ")}" unless (inventory_operation_ids - operation_ids).empty?
+errors << "inventory is missing or stale: #{(operations - inventory_operations).map { |entry| entry.join(" ") }.join(", ")}" unless (operations - inventory_operations).empty?
+errors << "inventory has unknown or stale entries: #{(inventory_operations - operations).map { |entry| entry.join(" ") }.join(", ")}" unless (inventory_operations - operations).empty?
+errors << "read profile has duplicates: #{duplicates(read_profile).join(", ")}" unless duplicates(read_profile).empty?
+errors << "read profile is missing: #{(expected_read_profile - read_profile).join(", ")}" unless (expected_read_profile - read_profile).empty?
+errors << "read profile has non-read operations: #{(read_profile - expected_read_profile).join(", ")}" unless (read_profile - expected_read_profile).empty?
+errors << "admin profile has duplicates: #{duplicates(admin_profile).join(", ")}" unless duplicates(admin_profile).empty?
+errors << "admin profile is missing: #{(expected_admin_profile - admin_profile).join(", ")}" unless (expected_admin_profile - admin_profile).empty?
+errors << "admin profile has non-admin operations: #{(admin_profile - expected_admin_profile).join(", ")}" unless (admin_profile - expected_admin_profile).empty?
+errors << "deployment profiles overlap: #{(read_profile & admin_profile).join(", ")}" unless (read_profile & admin_profile).empty?
+errors << "deployment profiles do not cover the manifest" unless (read_profile + admin_profile).sort == manifest.sort
+errors << "admin profile must require explicit enablement" unless policy["adminRequiresExplicitEnablement"] == true
+errors << "deployment profiles must not combine by default" unless policy["combineDeploymentProfilesByDefault"] == false
 errors << "write classifications have duplicates: #{duplicates(classified_writes).join(", ")}" unless duplicates(classified_writes).empty?
 errors << "non-GET operations are unclassified: #{(non_get_operations - classified_writes).join(", ")}" unless (non_get_operations - classified_writes).empty?
 errors << "write classifications include GET or unknown operations: #{(classified_writes - non_get_operations).join(", ")}" unless (classified_writes - non_get_operations).empty?
@@ -67,4 +83,4 @@ unless errors.empty?
   exit 1
 end
 
-puts "API coverage OK: #{operation_ids.length} operations; #{non_get_operations.length} non-GET operations classified"
+puts "API coverage OK: #{operation_ids.length} operations; #{read_profile.length} read and #{admin_profile.length} explicitly enabled admin operations"

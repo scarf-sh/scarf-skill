@@ -20,7 +20,7 @@ Activate admin behavior for one explicit user task only. Resolve the exact owner
 The current prompt is sufficient authorization for a **standard mutation** when it specifies an unambiguous target and desired result. Standard mutations are limited to:
 
 - creating or updating an `adhoc` insights filter;
-- creating or updating a collection whose membership is fully enumerated;
+- creating a collection whose membership is fully enumerated, or updating one only when no existing member is removed;
 - requesting domain verification;
 - submitting positive or negative endpoint feedback.
 
@@ -40,7 +40,7 @@ Treat every other mutation as **protected**. Show the exact target, material dif
 | Data ingestion | `importEvents`, `importPackageEvents`, `importTrackingPixelEvents` | Bulk, difficult-to-reverse data creation |
 | Broad changes | Batches, multiple owners, wildcards, or uncertain targets | Expanded blast radius |
 
-When an operation is both standard and protected because of context, protected wins. Examples: a global filter, deleting an older ad hoc filter, or a collection mutation that removes unknown members.
+When an operation is both standard and protected because of context, protected wins. Examples: a global filter, deleting an ad hoc filter, or any collection membership removal.
 
 ## Confirmation requirements
 
@@ -64,4 +64,4 @@ After confirmation, execute only the described call. If the target or body chang
 
 ## Deployment recommendation
 
-For stronger isolation, expose separate read and admin MCP tools or credentials and keep admin routes disabled unless explicitly configured. The skill-level profile prevents accidental use but cannot constrain a compromised or disobedient client by itself.
+Expose separate read and admin MCP allowlists or tools, deploy only the read profile by default, and keep admin routes disabled unless explicitly configured. Prefer separate least-privileged credentials. Never generate the default server allowlist from the full public-operation manifest. The skill-level profile prevents accidental use but cannot constrain a compromised or disobedient client by itself.

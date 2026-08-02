@@ -7,8 +7,8 @@ Let a Scarf user analyze data and manage resources across the published API thro
 ## Architecture
 
 - Use the Scarf MCP tool as the only transport.
-- Enforce a default-deny route allowlist in the MCP server.
-- Use `references/api-map.json` as the reviewable public-operation manifest.
+- Enforce a default-deny read allowlist in the MCP server and keep the separate admin allowlist disabled unless explicitly configured.
+- Use `references/api-map.json` as the reviewable public-operation manifest and deployment-profile source; never deploy its full manifest as the default allowlist.
 - Treat `references/access-policy.md` as behavioral defense in depth, not authorization enforcement.
 - Prefer separate least-privileged read and admin credentials or tools when the deployment supports them.
 

@@ -3,10 +3,12 @@
 ## API coverage
 
 - [ ] `references/api-v2-endpoint-inventory.md` matches the published OpenAPI spec
-- [ ] `references/api-map.json` contains every published operation exactly once
+- [ ] `references/api-map.json` contains every published operation exactly once in the manifest and exactly once across the separate deployment profiles
 - [ ] every non-`GET` operation is read-like, standard, protected, or conditionally protected
 - [ ] no undocumented or internal endpoint is allowlisted
-- [ ] the deployed MCP route allowlist matches the reviewed map
+- [ ] the deployed default MCP allowlist matches only `deploymentProfiles.read`
+- [ ] `deploymentProfiles.admin` is disabled unless explicitly configured and uses a separate least-privileged credential or tool where possible
+- [ ] the full public-operation manifest is never used as the default server allowlist
 
 ## Admin safety
 
