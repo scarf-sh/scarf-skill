@@ -30,6 +30,12 @@ def swap_inventory_ids(inventory, first_id, second_id)
   lines.sub("| `__swap__` |", "| `#{second_id}` |")
 end
 
+def swap_inventory_rows(inventory, first_id, second_id)
+  first = inventory.each_line.find { |line| line.start_with?("| `#{first_id}` |") }
+  second = inventory.each_line.find { |line| line.start_with?("| `#{second_id}` |") }
+  inventory.sub(first, "__SCARF_ROW_SWAP__\n").sub(second, first).sub("__SCARF_ROW_SWAP__\n", second)
+end
+
 def run_checker(map, spec, inventory)
   Dir.mktmpdir("scarf-coverage-test") do |directory|
     map_path = File.join(directory, "map.json")
@@ -137,6 +143,15 @@ cases = [
   end],
   ["offsetting inventory section drift", "inventory section Collections declares 6, contains 5", lambda do |_map, _spec, inventory|
     inventory.sub("## Collections (5)", "## Collections (6)").sub("## Company (5)", "## Company (4)")
+  end],
+  ["missing inventory section declarations", "inventory section names changed", lambda do |_map, _spec, inventory|
+    inventory.gsub(/^(## .+) \(\d+\)$/, '\\1')
+  end],
+  ["incomplete inventory section declarations", "inventory section names changed", lambda do |_map, _spec, inventory|
+    inventory.sub("## Collections (5)", "## Collections")
+  end],
+  ["inventory section membership drift", "inventory section membership changed", lambda do |_map, _spec, inventory|
+    swap_inventory_rows(inventory, "getCollections", "exportCompanyRollup")
   end],
   ["policy schema drift", "policy keys changed", lambda do |map, _spec, inventory|
     map["policy"]["retainAdminForSession"] = true

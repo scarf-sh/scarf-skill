@@ -34,6 +34,11 @@ EXPECTED_PROTECTED_CONDITIONS = {
 }.freeze
 EXPECTED_PUBLIC_OPERATION_DIGEST = "d1412c2211f9e66bca7db78377c6f3b655174fee820e63ef4a8f25c3809e6f3f"
 EXPECTED_CAPABILITY_DIGEST = "58f737c52059f377bb4a3a6ce28af730686ec12f04e2b9b554577a9ce7dd54f5"
+EXPECTED_INVENTORY_SECTIONS = [
+  "Collections", "Company", "Domains", "External event import", "Insights Filters", "Organization",
+  "Organizations", "Packages", "Search", "Tracking Pixels", "Users", "v3 Insights and AI"
+].freeze
+EXPECTED_INVENTORY_SECTION_DIGEST = "a4d1d1b86ed3e9f151b15f324ab8769bacbbcb6bd68caf5515ebb17b5fa75f58"
 
 map_path = ARGV[0] || DEFAULT_MAP
 spec_source = ARGV[1] || DEFAULT_SPEC
@@ -57,6 +62,13 @@ def capability_digest(capabilities)
   normalized = capabilities.keys.sort.each_with_object({}) do |name, result|
     operations = capabilities.fetch(name)
     result[name] = operations.is_a?(Array) ? operations.sort : operations
+  end
+  Digest::SHA256.hexdigest(JSON.generate(normalized))
+end
+
+def inventory_section_digest(sections)
+  normalized = sections.sort_by { |section| section[:name] }.map do |section|
+    [section[:name], section[:operations].sort]
   end
   Digest::SHA256.hexdigest(JSON.generate(normalized))
 end
@@ -109,7 +121,7 @@ inventory_sections = []
 current_inventory_section = nil
 inventory_operations = inventory_text.each_line.each_with_object([]) do |line, entries|
   if (section_match = line.match(/^## (.+) \((\d+)\)$/))
-    current_inventory_section = { name: section_match[1], expected: section_match[2].to_i, actual: 0 }
+    current_inventory_section = { name: section_match[1], expected: section_match[2].to_i, actual: 0, operations: [] }
     inventory_sections << current_inventory_section
   elsif line.start_with?("## ")
     current_inventory_section = nil
@@ -118,7 +130,10 @@ inventory_operations = inventory_text.each_line.each_with_object([]) do |line, e
   match = line.match(/^\| `([^`]+)` \| `(#{HTTP_METHODS.map(&:upcase).join("|")})` \| `([^`]+)` \|/)
   if match
     entries << [match[1], match[2], match[3]]
-    current_inventory_section[:actual] += 1 if current_inventory_section
+    if current_inventory_section
+      current_inventory_section[:actual] += 1
+      current_inventory_section[:operations] << match[1]
+    end
   end
 end
 inventory_operation_ids = inventory_operations.map(&:first)
@@ -155,6 +170,8 @@ errors << "published operation routes changed" unless tuple_digest(operations) =
 errors << "manifest is missing: #{(operation_ids - manifest_ids).join(", ")}" unless (operation_ids - manifest_ids).empty?
 errors << "manifest has unknown operations: #{(manifest_ids - operation_ids).join(", ")}" unless (manifest_ids - operation_ids).empty?
 errors << "inventory declares #{inventory_total.inspect}, contains #{inventory_operations.length}" unless inventory_total == inventory_operations.length
+errors << "inventory section names changed" unless inventory_sections.map { |section| section[:name] }.sort == EXPECTED_INVENTORY_SECTIONS.sort
+errors << "inventory section membership changed" unless inventory_section_digest(inventory_sections) == EXPECTED_INVENTORY_SECTION_DIGEST
 inventory_sections.each do |section|
   next if section[:expected] == section[:actual]
 
