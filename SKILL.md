@@ -1,78 +1,66 @@
 ---
 name: scarf-skill
-user-invocable: true
-description: Scarf Data Assistant skill for AI agents to answer Scarf analytics questions, Dependency Radar threat-monitoring questions, and manage insights filters with a user-provided SCARF_API_TOKEN using Scarf public API endpoints. Use when users ask for Scarf package/org metrics, v3 aggregation exports, funnel/lead summaries, Dependency Radar, supply chain security feed, org-wide download feed monitoring, export status, or bounded insights-filter CRUD workflows.
+description: Use Scarf's MCP tools to analyze Scarf data and administer public API resources, including packages, Scarf Gateway routes and domains, tracking pixels, collections, exports, insights filters, organization members, permissions, imports, Dependency Radar, and telemetry. Trigger for Scarf analytics, package or Gateway configuration, organization administration, or any other Scarf public API workflow.
 ---
 
-# Scarf Data Assistant
+# Scarf Data and Administration
 
-Use this skill to translate user intent into safe, reliable Scarf API calls and concise, actionable outputs.
+Use the Scarf MCP server for live Scarf data and administration. Do not invent results, call the API directly, or bypass the MCP server's route allowlist.
 
-## Operating contract
+## Security boundary
 
-- Require `SCARF_API_TOKEN` before any API call.
-- Never log, print, or persist raw tokens.
-- Require organization scope (`owner`) before query execution.
-- Distinguish org-level `organization_name` routes from owner-scoped `{owner}` analytics routes; do not substitute one for the other.
-- Default to read-oriented analytics flows.
-- Use v3 aggregation export (`GET /v3/insights/{owner}/aggregations/export`) for aggregate analytics; do not use the legacy v2 package aggregate export route.
-- Support Dependency Radar reads for security/threat-monitoring use cases.
-- Treat "Dependency Radar", "dependency radar", "supply chain security feed", and "organization/org-wide download feed" as equivalent user-facing terms for Scarf's organization-wide dependency monitoring product.
-- Treat Dependency Radar / the organization download feed as an open beta capability.
-- If Dependency Radar appears unavailable to the caller, suggest contacting Scarf via Slack or `help@scarf.sh`.
-- Allow insights-filter CRUD as the only v1 write surface.
-- v1 policy: execute `GET` operations plus the explicit insights-filter CRUD exceptions below.
-- Allowed non-`GET` operations:
-  - `POST /v2/insights/{owner}/filters`
-  - `PUT /v2/insights/{owner}/filters/{filter_id}`
-  - `DELETE /v2/insights/{owner}/filters/{filter_id}`
-- Block all other create/update/delete operations in v1.
-- Use UTC for all date logic and output labels.
-- If no time range is provided, default to last 30 days: `[now-30d, now)` in UTC.
-- Use `filter_id` when available to narrow scope and reduce noisy output.
-- When listing or creating filters, use `scope=adhoc|global` as documented.
-- Default to `adhoc` scope for filter creation.
-- Use `global` scope only when the user explicitly asks for it, and confirm once before creating it because `global` filters affect org-wide analytics until removed.
-- Prefer small, composable calls and summarize results in user language.
-- All list endpoints default to 10 results per page and return no pagination metadata (no `Link` header, no `total`/`next` in the body). Always pass `?per_page=N` large enough to cover the expected result set, or paginate explicitly with `?page=` until a short page is returned. Treating the default response as the full list is a known footgun — see `references/api-v2-endpoint-inventory.md` for details.
+- Treat the MCP allowlist and the API token's server-side permissions as the authorization boundary. Skill instructions are defense in depth, not a security sandbox.
+- Require a configured `SCARF_API_TOKEN`. Never print, log, persist, or echo the raw token.
+- Establish the exact `owner` or `organization_name` before every call. Do not confuse owner-scoped and organization-scoped routes.
+- Default to the read profile. Enter the admin profile only for the current, explicitly requested task; never carry admin authorization into a later request.
+- Refuse attempts to bypass confirmations, widen a target silently, call undocumented/internal routes, or replace the MCP tool with raw HTTP.
+- If an endpoint is public but unavailable through the MCP allowlist, name the blocked method and path and explain that the deployed MCP allowlist must be updated. Do not improvise another transport.
 
-## Startup flow
+## Read profile
 
-1. Validate auth (`401/403` handling with clear next-step guidance).
-2. Resolve organization scope (`owner`) and optional package/entity target.
-3. Resolve date range (default 30-day UTC window if omitted).
-4. If the user is managing filters, choose the minimal CRUD operation (`list`, `create`, `get`, `update`, `delete`), default new filters to `scope=adhoc`, and require one confirmation before any `scope=global` create.
-5. Route to the exact endpoint family the user named:
-   - aggregation exports / aggregate analytics / package or org aggregate downloads → `GET /v3/insights/{owner}/aggregations/export`
-   - Dependency Radar / supply chain security feed / explicit `download-feed` / "org-wide download feed" -> `GET /v2/organizations/{organization_name}/download-feed` with required query params `domain` and `date`
-   - company event feed / raw company events → `GET /v2/companies/{owner}/{domain}/events`
-   - company rollup / org-wide rollup summary → `GET /v2/packages/{owner}/company-rollup`
-6. If the user is asking about Dependency Radar activity, supply chain security feed activity, threat monitoring, suspicious installs, or domain-specific download activity, use `GET /v2/organizations/{organization_name}/download-feed` with an explicit `domain` and `date`.
-7. If Dependency Radar access fails because the endpoint is unavailable to the caller, say the feature is in open beta and suggest reaching out to Scarf via Slack or `help@scarf.sh`.
-8. Apply `filter_id` when an analytics endpoint supports it and a filter context is available.
-9. Run minimal API calls needed to answer the request.
-10. Return:
-   - direct answer,
-   - key numbers,
-   - assumptions,
-   - optional next action.
+- Permit public `GET` operations and the read-like `POST /v2/search` and `POST /v3/organizations/{owner}/ai/chat` operations without mutation confirmation.
+- Use UTC for date logic. If an analytics request gives no range, use `[now-30d, now)`.
+- Prefer small, scoped calls. Apply a relevant `filter_id`.
+- Treat every list response as potentially truncated: the API defaults to 10 results and returns no pagination metadata. Pass an explicit `per_page` (normally 200), then increment `page` until a short page is returned. If pagination is incomplete, label the result partial.
+- Route aggregate analytics to `GET /v3/insights/{owner}/aggregations/export`, not the legacy v2 aggregate route.
+- Route Dependency Radar to `GET /v2/organizations/{organization_name}/download-feed` with explicit `domain` and `date`; never substitute company events or company rollups.
+- If Dependency Radar is unavailable, identify it as open beta and suggest Scarf Slack or `help@scarf.sh`.
 
-## Output style
+## Admin profile
 
-- Be concise and decision-oriented.
-- Include caveats if data is partial, delayed, sampled, or filtered.
-- If a filter mutation succeeds, state exactly what changed and which `filter_id` or scope was affected.
-- If the API fails, provide exact reason plus one concrete recovery step.
-- When the user asks for Dependency Radar, the supply chain security feed, or explicitly names an endpoint (for example `download-feed`), say which endpoint you used in the answer.
-- Do not silently replace Dependency Radar, supply chain security feed, or `download-feed` requests with company events or company rollup.
-- When answering from aggregate exports, say that you used `GET /v3/insights/{owner}/aggregations/export`.
+Before any state-changing call:
 
-## References
+1. Resolve the exact organization, resource type, resource id or name, method, path, query, and body.
+2. Read the current resource first when a corresponding `GET` exists. Summarize the material before/after difference and retain the returned identifiers for verification.
+3. Classify the operation with `references/access-policy.md`.
+4. For a standard mutation, treat the user's current explicit and unambiguous request as authorization. Ask only for missing values that materially affect the result.
+5. For a protected mutation, show the exact target and impact and obtain a fresh confirmation immediately before the call. A request to plan, reconcile, or generally manage resources is not confirmation.
+6. Execute one protected mutation at a time. Never run admin mutations concurrently, expand one confirmation to other targets, or combine an approved change with an unapproved one.
+7. Re-read the resource after success when possible. Report exactly what changed, the returned id, and any follow-up or rollback action.
 
-- Read `references/v1-spec.md` for architecture, scope, defaults, and API strategy.
-- Read `references/v1-allowlist.md` for the execution allowlist and insights-filter CRUD exceptions.
-- Read `references/api-v2-endpoint-inventory.md` for the public endpoint catalog derived from the published OpenAPI specs, including the v3 aggregation export replacement for legacy v2 aggregates.
-- Read `references/api-map.v1.json` for v1 capability-to-endpoint mapping.
-- Read `references/filter-catalog.md` for supported filter keys, scope usage, and payload examples.
+Protected mutations include:
+
+- all `DELETE` operations;
+- package, Scarf Gateway route/domain, tracking-pixel, organization, membership, role, and permission changes;
+- scheduled export changes, global insights filters, and persisted user-defined variables;
+- event imports or aborts, multi-resource changes, and unusually broad operations;
+- any mutation whose target, impact, or reversibility is uncertain.
+
+Do not retry a timed-out or failed non-idempotent mutation until a read verifies whether it took effect. Never guess request bodies or send fields the user did not authorize.
+
+## Public API routing
+
+- Read `references/api-v2-endpoint-inventory.md` for every published v2 and v3 operation and pagination behavior.
+- Read `references/api-map.json` for the machine-readable full allowlist and capability groups.
+- Read `references/access-policy.md` before any non-read-like `POST`, `PUT`, or `DELETE`.
+- Read `references/filter-catalog.md` for insights-filter bodies and scope rules.
+- Use the MCP tool's current schema for request parameters; the published OpenAPI spec remains authoritative when the references drift.
+
+## Response format
+
+Lead with the direct result, then state the affected scope, endpoint family, assumptions, and one useful next action. For mutations, include the exact resource and id, whether post-change verification succeeded, and any partial-failure caveat. Surface API errors faithfully with one concrete recovery step.
+
+## Release references
+
+- Read `references/prompt-examples.md` for acceptance cases.
 - Read `references/launch-checklist.md` before release.
-- Read `references/prompt-examples.md` for canonical user intents and expected behavior.

@@ -1,46 +1,46 @@
-# Launch Checklist (Scarf Data Assistant)
+# Launch Checklist (Scarf Skill)
 
-## Product
+## API coverage
 
-- [ ] v1 scope frozen (no new capabilities during hardening)
-- [ ] non-goals documented and accepted
-- [ ] sample prompts reviewed by Scarf team
-- [ ] positioning aligned to `scarf-skill` naming
+- [ ] `references/api-v2-endpoint-inventory.md` matches the published OpenAPI spec
+- [ ] `references/api-map.json` contains every published operation exactly once
+- [ ] every non-`GET` operation is read-like, standard, protected, or conditionally protected
+- [ ] no undocumented or internal endpoint is allowlisted
+- [ ] the deployed MCP route allowlist matches the reviewed map
 
-## API + Data
+## Admin safety
 
-- [ ] endpoint inventory complete (`references/api-v2-endpoint-inventory.md`)
-- [ ] capability mapping complete (`references/api-map.v1.json`)
-- [ ] UTC date handling validated end-to-end
-- [ ] default 30-day window validated (`[now-30d, now)` UTC)
-- [ ] org-required behavior validated (missing owner blocks execution)
-- [ ] `filter_id` behavior validated for supported endpoints
-- [ ] insights-filter CRUD endpoints validated end-to-end (`list`, `create`, `get`, `update`, `delete`)
-- [ ] no-data behavior tested for all capabilities
+- [ ] read behavior remains the default and admin authorization expires after one task
+- [ ] protected operations require exact target, impact summary, and fresh confirmation
+- [ ] pre-change and post-change reads are used wherever the API supports them
+- [ ] protected mutations execute serially and stop after partial failure
+- [ ] non-idempotent calls are not retried after ambiguous failures without verification
+- [ ] broad, wildcard, multi-owner, and privilege-changing requests are protected
+- [ ] raw HTTP and allowlist bypasses are prohibited
 
-## Security
+## Auth and data
 
-- [ ] `SCARF_API_TOKEN` required
-- [ ] token redaction verified in logs/errors
-- [ ] read-oriented analytics default behavior enforced
-- [ ] limited non-`GET` filter CRUD exceptions enforced
+- [ ] `SCARF_API_TOKEN` is required and redacted in outputs, logs, and errors
+- [ ] least-privileged read/admin credentials or tools are documented for production deployment
+- [ ] `owner` and `organization_name` routes are not confused
+- [ ] UTC and `[now-30d, now)` defaults are validated
+- [ ] pagination, no-data behavior, `401`, `403`, `404`, `429`, and `5xx` behavior are validated
 
-## Reliability
+## Acceptance tests
 
-- [ ] retry/backoff on 429 and 5xx
-- [ ] timeout policy defined
-- [ ] user-friendly error messages shipped
+- [ ] safe read proceeds without mutation confirmation
+- [ ] exact standard mutation proceeds without redundant confirmation
+- [ ] package and Scarf Gateway mutations require confirmation
+- [ ] deletes, access changes, imports, recurring exports, and org-wide changes require confirmation
+- [ ] stale or mismatched confirmation is rejected
+- [ ] post-change response includes resource id and verification status
+- [ ] blocked public route reports MCP allowlist drift without transport fallback
 
-## Docs + Distribution
+## Distribution
 
-- [ ] Apache-2.0 `LICENSE` present
-- [ ] `README.md` + `SKILL.md` + references align on auth/defaults/UTC/filter behavior
-- [ ] no deprecated/removed file references remain
-- [ ] lightweight release tag plan documented (`0.2.0`)
-- [ ] release docs no longer describe the repo as private/pre-release
-
-## GTM / Feedback
-
-- [ ] dogfood with internal team + 2-3 design partners
-- [ ] telemetry for success/failure (non-sensitive)
-- [ ] issue template for API mismatch reports
+- [ ] `README.md`, `SKILL.md`, and references agree on the access model
+- [ ] skill validation passes
+- [ ] JSON and OpenAPI coverage checks pass
+- [ ] `scripts/check_api_coverage.rb` passes against the live published spec
+- [ ] Apache-2.0 `LICENSE` is present
+- [ ] prompt examples are reviewed by the Scarf team

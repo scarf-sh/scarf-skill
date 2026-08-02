@@ -1,4 +1,4 @@
-# Scarf API v2 Endpoint Inventory (Public Spec Source)
+# Scarf API Endpoint Inventory (Public Spec Source)
 
 Published spec: `https://api.scarf.sh/static/api-v2.yaml`
 
@@ -6,7 +6,8 @@ Aggregation export exception: use public v3 `GET /v3/insights/{owner}/aggregatio
 
 Notes:
 - Inventory generated from the published v2 OpenAPI spec.
-- Include only endpoints present in this file for skill v1.
+- The document contains published v2 and v3 paths despite its filename.
+- Snapshot checked on 2026-08-02.
 - Ignore internal-only fields unless they are documented for external users.
 
 ## Pagination (applies to all list endpoints)
@@ -24,7 +25,7 @@ List endpoints (`GET` operations that return a collection — packages, routes, 
 - If exactly `per_page` rows come back, do not assume that's the full list — page forward with `?page=2`, `?page=3`, … until a short page is returned.
 - When summarizing results to the user, never imply completeness from a single page; if you didn't paginate to exhaustion, say so.
 
-Total operations: 79
+Total operations: 83
 
 ## Collections (5)
 
@@ -171,3 +172,12 @@ Note:
 |---|---|---|---|
 | `getUserInformation` | `GET` | `/v2/users/{username}` | Get user |
 | `getUserOrganizations` | `GET` | `/v2/users/{username}/organizations` | List user organizatons |
+
+## v3 Insights and AI (4)
+
+| operationId | Method | Path | Summary |
+|---|---|---|---|
+| `export_entity_aggregations` | `GET` | `/v3/insights/{owner}/aggregations/export` | Export Entity Aggregations |
+| `chat_with_scarf_ai` | `POST` | `/v3/organizations/{owner}/ai/chat` | Chat with Scarf AI |
+| `create_positive_endpoint_feedback` | `POST` | `/v3/organizations/{owner}/endpoint-feedback/matches` | Create Positive Endpoint Feedback |
+| `create_negative_endpoint_feedback` | `POST` | `/v3/organizations/{owner}/endpoint-feedback/unmatches` | Create Negative Endpoint Feedback |

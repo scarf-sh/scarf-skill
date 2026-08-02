@@ -1,29 +1,35 @@
 # scarf-skill
 
-Scarf Data Assistant skill for Scarf analytics, Dependency Radar monitoring, and insights-filter workflows.
+Scarf skill for analytics, Dependency Radar, and administration across the published Scarf API.
 
-## v1 contract (analytics-first with bounded filter CRUD)
+## Access model
 
-- Auth env var: `SCARF_API_TOKEN` (required)
-- Organization scope: required (`owner` / org slug)
-- Timezone handling: **UTC only** for all defaults and reporting
-- Default date window when missing: last **30 days** (`[now-30d, now)` in UTC)
-- API scope: `GET` by default, plus limited insights-filter CRUD
-- Aggregations: use `GET /v3/insights/{owner}/aggregations/export`; do not use legacy `/v2/packages/{owner}/aggregates`
-- Allowed filter mutations: `createInsightsFilter`, `updateInsightsFilter`, `deleteInsightsFilter`
-- Optional narrowing: use `filter_id` when endpoint supports it, or manage filters through the public `/v2/insights/{owner}/filters` endpoints
-- Dependency Radar: route Dependency Radar, supply chain security feed, and org-wide download-feed requests to `getOrganizationDownloadFeed`
-- Filter listing/creation params: `scope=adhoc|global`, plus `saved_only=true` when the user wants saved filters only
-- Scope guidance: default new filters to `adhoc`; use `global` only when the user explicitly asks for it and confirms once
+The skill separates work into two request-scoped profiles:
 
-## Included files
+- **Read:** public `GET` routes plus the read-like search and Scarf AI chat `POST` routes.
+- **Admin:** public state-changing routes for packages, Scarf Gateway domains and routes, tracking pixels, collections, scheduled exports, filters, organization members and permissions, and event imports.
 
-- `SKILL.md`
-- `references/filter-catalog.md`
-- `references/v1-spec.md`
-- `references/v1-allowlist.md`
-- `references/api-v2-endpoint-inventory.md` (public v2 catalog plus v3 aggregation-export replacement note)
-- `references/api-map.v1.json`
-- `references/prompt-examples.md`
-- `references/launch-checklist.md`
-- `LICENSE` (Apache-2.0)
+Admin access is default-deny at the MCP layer. The skill adds behavioral guardrails: exact target resolution, pre-change reads, fresh confirmation for protected operations, serialized mutations, and post-change verification. A skill is not a security boundary; production deployments should also use a least-privileged token and an explicit server-side route allowlist.
+
+The current capability map covers all 83 operations in the published v2/v3 OpenAPI document as of 2026-08-02.
+
+## Defaults
+
+- Auth: `SCARF_API_TOKEN` (required and never echoed)
+- Organization scope: explicit `owner` or `organization_name`
+- Analytics timezone: UTC
+- Missing analytics window: `[now-30d, now)`
+- Aggregations: `GET /v3/insights/{owner}/aggregations/export`, never the legacy v2 aggregate route
+- List pagination: explicit `per_page` and `page` until a short page; the API defaults to 10 with no pagination metadata
+- Insights-filter scope: `adhoc` unless the user explicitly requests and confirms `global`
+- Dependency Radar: `GET /v2/organizations/{organization_name}/download-feed`
+
+## References
+
+- `references/access-policy.md`: read/admin isolation and confirmation policy
+- `references/api-map.json`: full public operation allowlist and capability groups
+- `references/api-v2-endpoint-inventory.md`: published endpoint catalog
+- `references/filter-catalog.md`: insights-filter schema and examples
+- `references/prompt-examples.md`: behavioral acceptance cases
+- `references/launch-checklist.md`: release checks
+- `LICENSE`: Apache-2.0
