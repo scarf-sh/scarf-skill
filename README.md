@@ -16,7 +16,7 @@ The current capability map covers all 83 operations in the published v2/v3 OpenA
 ## Defaults
 
 - Auth: `SCARF_API_TOKEN` (required and never echoed)
-- Organization scope: explicit `owner` or `organization_name`
+- Route scope: resolve every identifier declared by the selected route; require `owner` or `organization_name` only when that route declares it
 - Analytics timezone: UTC
 - Missing analytics window: `[now-30d, now)`
 - Aggregations: `GET /v3/insights/{owner}/aggregations/export`, never the legacy v2 aggregate route

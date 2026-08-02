@@ -71,12 +71,14 @@ errors << "admin profile is missing: #{(expected_admin_profile - admin_profile).
 errors << "admin profile has non-admin operations: #{(admin_profile - expected_admin_profile).join(", ")}" unless (admin_profile - expected_admin_profile).empty?
 errors << "deployment profiles overlap: #{(read_profile & admin_profile).join(", ")}" unless (read_profile & admin_profile).empty?
 errors << "deployment profiles do not cover the manifest" unless (read_profile + admin_profile).sort == manifest.sort
+errors << "default profile must be read" unless policy["defaultProfile"] == "read"
 errors << "admin profile must require explicit enablement" unless policy["adminRequiresExplicitEnablement"] == true
 errors << "deployment profiles must not combine by default" unless policy["combineDeploymentProfilesByDefault"] == false
 errors << "write classifications have duplicates: #{duplicates(classified_writes).join(", ")}" unless duplicates(classified_writes).empty?
 errors << "non-GET operations are unclassified: #{(non_get_operations - classified_writes).join(", ")}" unless (non_get_operations - classified_writes).empty?
 errors << "write classifications include GET or unknown operations: #{(classified_writes - non_get_operations).join(", ")}" unless (classified_writes - non_get_operations).empty?
 errors << "capability groups are missing: #{(operation_ids - capability_operations).join(", ")}" unless (operation_ids - capability_operations).empty?
+errors << "capability groups have unknown operations: #{(capability_operations - operation_ids).join(", ")}" unless (capability_operations - operation_ids).empty?
 
 unless errors.empty?
   warn errors.join("\n")

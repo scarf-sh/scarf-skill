@@ -23,7 +23,7 @@ Do not call undocumented internal endpoints. When the published spec changes, up
 ## Auth and scope
 
 - Require `SCARF_API_TOKEN` and never expose it.
-- Require an exact `owner` or `organization_name`.
+- Resolve every identifier declared by the selected route. Require an exact `owner` or `organization_name` only for routes that declare one; username discovery routes require `username` instead.
 - Use UTC for analytics windows and default to `[now-30d, now)` when omitted.
 - Require explicit dates and domains for Dependency Radar.
 - Paginate list operations and prefer bounded requests.
