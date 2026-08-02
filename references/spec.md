@@ -46,7 +46,7 @@ Validate:
 - prompt behavior for safe reads, standard mutations, protected mutations, stale confirmation, partial failure, and blocked routes;
 - auth redaction, pagination, UTC defaults, `401`/`403`/`404`/`429`/`5xx`, and schema drift.
 
-Run both `scripts/check_api_coverage.rb` against the live spec and `scripts/test_api_coverage.rb` before release. The mutation suite must reject synchronized route swaps, new referenced operations, policy escalation, classification drift, capability reassignment, malformed map shapes, and stale inventory counts.
+Run `scripts/check_api_coverage.rb` against the live spec before release. Its negative audit must reject synchronized route swaps, new referenced operations, policy escalation, classification drift, capability reassignment, malformed map shapes, and stale inventory counts.
 
 ## Response contract
 

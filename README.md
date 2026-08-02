@@ -37,4 +37,3 @@ The current capability map covers all 83 operations in the published v2/v3 OpenA
 ## Validation
 
 - `ruby scripts/check_api_coverage.rb`: compare the live OpenAPI document, canonical manifest, inventory, profiles, policy, and capability groups.
-- `ruby scripts/test_api_coverage.rb`: run the baseline plus fail-closed mutation cases for route swaps, privilege escalation, reclassification, predicate drift, schema drift, and referenced operations.
