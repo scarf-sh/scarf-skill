@@ -112,12 +112,7 @@ end
 inventory_operation_ids = inventory_operations.map(&:first)
 inventory_total = inventory_text[/^Total operations: (\d+)$/, 1]&.to_i
 inventory_section_total = inventory_text.scan(/^## .+ \((\d+)\)$/).flatten.map(&:to_i).reduce(0, :+)
-manifest_operations = map.fetch("publicOperationManifest").map do |entry|
-  raise "publicOperationManifest entry keys changed" unless entry.keys.sort == %w[method operationId path]
-
-  [entry.fetch("operationId"), entry.fetch("method"), entry.fetch("path")]
-end
-manifest_ids = manifest_operations.map(&:first)
+manifest_ids = map.fetch("publicOperationManifest")
 read_profile = map.dig("deploymentProfiles", "read")
 admin_profile = map.dig("deploymentProfiles", "admin")
 policy = map.fetch("policy")
@@ -144,10 +139,9 @@ errors << "policy keys changed" unless policy.keys.sort == EXPECTED_POLICY_KEYS.
 errors << "source count is #{operation_ids.length}, map declares #{map.dig("source", "operationCount")}" unless operation_ids.length == map.dig("source", "operationCount")
 errors << "OpenAPI operation IDs have duplicates: #{duplicates(operation_ids).join(", ")}" unless duplicates(operation_ids).empty?
 errors << "manifest has duplicate operation IDs: #{duplicates(manifest_ids).join(", ")}" unless duplicates(manifest_ids).empty?
-errors << "manifest has duplicate tuples" unless duplicates(manifest_operations).empty?
-errors << "published operation routes changed" unless tuple_digest(manifest_operations) == EXPECTED_PUBLIC_OPERATION_DIGEST
-errors << "manifest is missing or stale: #{(operations - manifest_operations).map { |entry| entry.join(" ") }.join(", ")}" unless (operations - manifest_operations).empty?
-errors << "manifest has unknown or stale routes: #{(manifest_operations - operations).map { |entry| entry.join(" ") }.join(", ")}" unless (manifest_operations - operations).empty?
+errors << "published operation routes changed" unless tuple_digest(operations) == EXPECTED_PUBLIC_OPERATION_DIGEST
+errors << "manifest is missing: #{(operation_ids - manifest_ids).join(", ")}" unless (operation_ids - manifest_ids).empty?
+errors << "manifest has unknown operations: #{(manifest_ids - operation_ids).join(", ")}" unless (manifest_ids - operation_ids).empty?
 errors << "inventory declares #{inventory_total.inspect}, contains #{inventory_operations.length}" unless inventory_total == inventory_operations.length
 errors << "inventory section counts total #{inventory_section_total}, contains #{inventory_operations.length}" unless inventory_section_total == inventory_operations.length
 errors << "inventory has duplicate operation IDs: #{duplicates(inventory_operation_ids).join(", ")}" unless duplicates(inventory_operation_ids).empty?

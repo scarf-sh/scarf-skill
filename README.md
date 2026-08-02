@@ -11,7 +11,7 @@ The skill separates work into two request-scoped profiles:
 
 Admin access is default-deny at the MCP layer. Deploy the read allowlist by default and expose the separate admin allowlist only through explicit configuration. The skill adds behavioral guardrails: exact target resolution, pre-change reads, fresh confirmation for protected operations, serialized mutations, and post-change verification. A skill is not a security boundary; production deployments should also use least-privileged, separate read/admin credentials where possible.
 
-The current capability map covers all 83 operations in the published v2/v3 OpenAPI document as of 2026-08-02. Each manifest entry binds its operation ID to the approved HTTP method and path so policy assignments cannot silently move to another route.
+The current capability map covers all 83 operations in the published v2/v3 OpenAPI document as of 2026-08-02. The release checker independently pins every operation ID to its approved HTTP method and path so policy assignments cannot silently move to another route.
 
 ## Defaults
 
@@ -27,7 +27,7 @@ The current capability map covers all 83 operations in the published v2/v3 OpenA
 ## References
 
 - `references/access-policy.md`: read/admin isolation and confirmation policy
-- `references/api-map.json`: canonical operation ID/method/path manifest plus separate read/admin deployment profiles
+- `references/api-map.json`: full public operation-ID manifest plus separate read/admin deployment profiles
 - `references/api-v2-endpoint-inventory.md`: published endpoint catalog
 - `references/filter-catalog.md`: insights-filter schema and examples
 - `references/prompt-examples.md`: behavioral acceptance cases

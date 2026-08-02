@@ -53,7 +53,7 @@ After a timeout, connection loss, or other ambiguous non-idempotent failure, do 
 ## Public API routing
 
 - Read `references/api-v2-endpoint-inventory.md` for every published v2 and v3 operation and pagination behavior.
-- Read `references/api-map.json` for the machine-readable operation ID/method/path manifest, separate read/admin deployment profiles, and capability groups. Treat the tuple as the operation identity; never apply an allowlist entry or policy classification to the same operation ID on a different method or path.
+- Read `references/api-map.json` for the machine-readable public manifest, separate read/admin deployment profiles, and capability groups. Treat the inventory's operation ID/method/path tuple as the operation identity; never apply an allowlist entry or policy classification to the same operation ID on a different method or path.
 - Read `references/access-policy.md` before any non-read-like `POST`, `PUT`, or `DELETE`.
 - Read `references/filter-catalog.md` for insights-filter bodies and scope rules.
 - Use the MCP tool's current schema for request parameters; the published OpenAPI spec remains authoritative when the references drift.

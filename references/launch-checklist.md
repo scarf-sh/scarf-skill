@@ -3,7 +3,7 @@
 ## API coverage
 
 - [ ] `references/api-v2-endpoint-inventory.md` matches the published OpenAPI spec
-- [ ] `references/api-map.json` contains every published operation ID/method/path tuple exactly once in the manifest and every operation ID exactly once across the separate deployment profiles
+- [ ] `references/api-map.json` contains every published operation ID exactly once in the manifest and across the separate deployment profiles; the release checker pins every ID/method/path tuple
 - [ ] every non-`GET` operation is read-like, standard, protected, or conditionally protected
 - [ ] no undocumented or internal endpoint is allowlisted
 - [ ] the deployed default MCP allowlist matches only `deploymentProfiles.read`
