@@ -45,6 +45,6 @@
 - [ ] skill validation passes
 - [ ] JSON and live OpenAPI coverage checks pass with canonical route, policy, profile, capability, and inventory parity
 - [ ] `scripts/check_api_coverage.rb` passes against the live published spec
-- [ ] negative coverage checks reject route swaps, policy escalation, classification drift, capability reassignment, referenced operations, and stale inventory counts
+- [ ] `scripts/test_api_coverage.rb` rejects route swaps, policy escalation, classification drift, capability reassignment, undeclared profiles, referenced operations, malformed shapes, and stale inventory counts
 - [ ] Apache-2.0 `LICENSE` is present
 - [ ] prompt examples are reviewed by the Scarf team

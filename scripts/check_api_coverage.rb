@@ -105,13 +105,24 @@ end
 operation_ids = operations.map(&:first)
 operation_by_id = operations.each_with_object({}) { |operation, result| result[operation.first] = operation }
 inventory_text = File.read(inventory_path)
+inventory_sections = []
+current_inventory_section = nil
 inventory_operations = inventory_text.each_line.each_with_object([]) do |line, entries|
+  if (section_match = line.match(/^## (.+) \((\d+)\)$/))
+    current_inventory_section = { name: section_match[1], expected: section_match[2].to_i, actual: 0 }
+    inventory_sections << current_inventory_section
+  elsif line.start_with?("## ")
+    current_inventory_section = nil
+  end
+
   match = line.match(/^\| `([^`]+)` \| `(#{HTTP_METHODS.map(&:upcase).join("|")})` \| `([^`]+)` \|/)
-  entries << [match[1], match[2], match[3]] if match
+  if match
+    entries << [match[1], match[2], match[3]]
+    current_inventory_section[:actual] += 1 if current_inventory_section
+  end
 end
 inventory_operation_ids = inventory_operations.map(&:first)
 inventory_total = inventory_text[/^Total operations: (\d+)$/, 1]&.to_i
-inventory_section_total = inventory_text.scan(/^## .+ \((\d+)\)$/).flatten.map(&:to_i).reduce(0, :+)
 manifest_ids = map.fetch("publicOperationManifest")
 read_profile = map.dig("deploymentProfiles", "read")
 admin_profile = map.dig("deploymentProfiles", "admin")
@@ -136,6 +147,7 @@ capability_operations = capabilities.values.select { |value| value.is_a?(Array) 
 errors = []
 errors << "source URL changed" unless map.dig("source", "url") == DEFAULT_SPEC
 errors << "policy keys changed" unless policy.keys.sort == EXPECTED_POLICY_KEYS.sort
+errors << "deployment profile keys changed" unless map.fetch("deploymentProfiles").keys.sort == %w[admin read]
 errors << "source count is #{operation_ids.length}, map declares #{map.dig("source", "operationCount")}" unless operation_ids.length == map.dig("source", "operationCount")
 errors << "OpenAPI operation IDs have duplicates: #{duplicates(operation_ids).join(", ")}" unless duplicates(operation_ids).empty?
 errors << "manifest has duplicate operation IDs: #{duplicates(manifest_ids).join(", ")}" unless duplicates(manifest_ids).empty?
@@ -143,7 +155,11 @@ errors << "published operation routes changed" unless tuple_digest(operations) =
 errors << "manifest is missing: #{(operation_ids - manifest_ids).join(", ")}" unless (operation_ids - manifest_ids).empty?
 errors << "manifest has unknown operations: #{(manifest_ids - operation_ids).join(", ")}" unless (manifest_ids - operation_ids).empty?
 errors << "inventory declares #{inventory_total.inspect}, contains #{inventory_operations.length}" unless inventory_total == inventory_operations.length
-errors << "inventory section counts total #{inventory_section_total}, contains #{inventory_operations.length}" unless inventory_section_total == inventory_operations.length
+inventory_sections.each do |section|
+  next if section[:expected] == section[:actual]
+
+  errors << "inventory section #{section[:name]} declares #{section[:expected]}, contains #{section[:actual]}"
+end
 errors << "inventory has duplicate operation IDs: #{duplicates(inventory_operation_ids).join(", ")}" unless duplicates(inventory_operation_ids).empty?
 errors << "inventory has duplicate tuples" unless duplicates(inventory_operations).empty?
 errors << "inventory is missing or stale: #{(operations - inventory_operations).map { |entry| entry.join(" ") }.join(", ")}" unless (operations - inventory_operations).empty?
