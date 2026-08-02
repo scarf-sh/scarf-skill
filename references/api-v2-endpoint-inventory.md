@@ -120,7 +120,6 @@ Note:
 | `getScheduledExportsHistory` | `GET` | `/v2/exports/{owner}/schedule-export-history` | Retrieve recent scheduled exports history |
 | `getPackages` | `GET` | `/v2/packages/{owner}` | List packages |
 | `createPackage` | `POST` | `/v2/packages/{owner}` | Creates a new package |
-| `exportEntityAggregationsV3` | `GET` | `/v3/insights/{owner}/aggregations/export` | Export aggregates (v3 replacement) |
 | `exportEntityAggregates` | `GET` | `/v2/packages/{owner}/aggregates` | Deprecated legacy aggregate export; do not use for skill flows |
 | `exportEntityPackageEvents` | `GET` | `/v2/packages/{owner}/events` | Export all package events |
 | `getPackagesOverview` | `GET` | `/v2/packages/{owner}/overview` | List packages overview |

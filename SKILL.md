@@ -1,5 +1,6 @@
 ---
 name: scarf-skill
+user-invocable: true
 description: Use Scarf's MCP tools to analyze Scarf data and administer public API resources, including packages, Scarf Gateway routes and domains, tracking pixels, collections, exports, insights filters, organization members, permissions, imports, Dependency Radar, and telemetry. Trigger for Scarf analytics, package or Gateway configuration, organization administration, or any other Scarf public API workflow.
 ---
 
