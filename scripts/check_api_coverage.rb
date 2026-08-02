@@ -10,6 +10,15 @@ DEFAULT_SPEC = "https://api.scarf.sh/static/api-v2.yaml"
 DEFAULT_INVENTORY = File.join(ROOT, "references", "api-v2-endpoint-inventory.md")
 HTTP_METHODS = %w[get put post delete options head patch trace].freeze
 APPROVED_READ_LIKE_POSTS = %w[search chat_with_scarf_ai].freeze
+APPROVED_STANDARD_MUTATIONS = %w[
+  createInsightsFilter
+  updateInsightsFilter
+  requestDomainVerification
+  createCollection
+  updateCollection
+  create_positive_endpoint_feedback
+  create_negative_endpoint_feedback
+].freeze
 EXPECTED_CONDITIONALLY_PROTECTED = %w[
   createInsightsFilter
   updateInsightsFilter
@@ -31,11 +40,41 @@ def duplicates(values)
   values.group_by { |value| value }.select { |_value, matches| matches.length > 1 }.keys
 end
 
+def resolve_json_pointer(document, reference)
+  raise "unsupported external path-item reference: #{reference}" unless reference.start_with?("#/")
+
+  reference.delete_prefix("#/").split("/").reduce(document) do |node, raw_token|
+    token = raw_token.gsub("~1", "/").gsub("~0", "~")
+    raise "unresolved path-item reference: #{reference}" unless node.is_a?(Hash) && node.key?(token)
+
+    node.fetch(token)
+  end
+end
+
+def resolve_path_item(document, path_item)
+  resolved = path_item
+  visited = []
+
+  while resolved.is_a?(Hash) && resolved.key?("$ref")
+    reference = resolved.fetch("$ref")
+    raise "circular path-item reference: #{reference}" if visited.include?(reference)
+
+    visited << reference
+    target = resolve_json_pointer(document, reference)
+    raise "path-item reference is not an object: #{reference}" unless target.is_a?(Hash)
+
+    resolved = target.merge(resolved.reject { |key, _value| key == "$ref" })
+  end
+
+  resolved
+end
+
 map = JSON.parse(File.read(map_path))
 spec = YAML.load(read_source(spec_source))
 
 operations = []
 (spec["paths"] || {}).each do |path, path_item|
+  path_item = resolve_path_item(spec, path_item)
   path_item.each do |method, operation|
     next unless HTTP_METHODS.include?(method)
 
@@ -61,6 +100,7 @@ classified_writes = read_like_posts + standard_mutations + protected_mutations
 non_get_operations = operations.reject { |_id, method, _path| method == "GET" }.map(&:first)
 expected_read_profile = operations.select { |_id, method, _path| method == "GET" }.map(&:first) + read_like_posts
 expected_admin_profile = standard_mutations + protected_mutations
+expected_protected_mutations = non_get_operations - APPROVED_READ_LIKE_POSTS - APPROVED_STANDARD_MUTATIONS
 operation_methods = operations.each_with_object({}) { |(id, method, _path), result| result[id] = method }
 capabilities = map.fetch("capabilities")
 invalid_capability_groups = capabilities.select do |_name, operation_list|
@@ -86,10 +126,14 @@ errors << "deployment profiles overlap: #{(read_profile & admin_profile).join(",
 errors << "deployment profiles do not cover the manifest" unless (read_profile + admin_profile).sort == manifest.sort
 errors << "read-like operations must be exactly: #{APPROVED_READ_LIKE_POSTS.join(", ")}" unless read_like_posts.sort == APPROVED_READ_LIKE_POSTS.sort
 errors << "read-like operations must use POST: #{read_like_posts.reject { |id| operation_methods[id] == "POST" }.join(", ")}" unless read_like_posts.all? { |id| operation_methods[id] == "POST" }
+errors << "standard mutations must be exactly: #{APPROVED_STANDARD_MUTATIONS.join(", ")}" unless standard_mutations.sort == APPROVED_STANDARD_MUTATIONS.sort
+errors << "protected mutations are missing: #{(expected_protected_mutations - protected_mutations).join(", ")}" unless (expected_protected_mutations - protected_mutations).empty?
+errors << "protected mutations contain non-protected operations: #{(protected_mutations - expected_protected_mutations).join(", ")}" unless (protected_mutations - expected_protected_mutations).empty?
 errors << "conditionally protected operations must be exactly: #{EXPECTED_CONDITIONALLY_PROTECTED.join(", ")}" unless protected_conditions.keys.sort == EXPECTED_CONDITIONALLY_PROTECTED.sort
 errors << "conditional protection keys must also be standard mutations: #{(protected_conditions.keys - standard_mutations).join(", ")}" unless (protected_conditions.keys - standard_mutations).empty?
 errors << "conditional protection descriptions must be non-empty strings" unless protected_conditions.values.all? { |value| value.is_a?(String) && !value.empty? }
 errors << "default profile must be read" unless policy["defaultProfile"] == "read"
+errors << "admin scope must be single-explicit-task" unless policy["adminScope"] == "single-explicit-task"
 errors << "admin profile must require explicit enablement" unless policy["adminRequiresExplicitEnablement"] == true
 errors << "deployment profiles must not combine by default" unless policy["combineDeploymentProfilesByDefault"] == false
 errors << "write classifications have duplicates: #{duplicates(classified_writes).join(", ")}" unless duplicates(classified_writes).empty?
