@@ -14,6 +14,7 @@
 
 - [ ] read behavior remains the default and admin authorization expires after one task
 - [ ] protected operations require exact target, impact summary, and fresh confirmation
+- [ ] protected state is re-read or conditionally checked after confirmation and before mutation
 - [ ] pre-change and post-change reads are used wherever the API supports them
 - [ ] protected mutations execute serially and stop after partial failure
 - [ ] non-idempotent calls are not retried after ambiguous failures without verification
@@ -45,6 +46,6 @@
 - [ ] skill validation passes
 - [ ] JSON and live OpenAPI coverage checks pass with canonical route, policy, profile, capability, and inventory parity
 - [ ] `scripts/check_api_coverage.rb` passes against the live published spec
-- [ ] `scripts/test_api_coverage.rb` rejects route swaps, policy escalation, classification drift, capability reassignment, undeclared profiles, referenced operations, malformed shapes, and stale inventory counts
+- [ ] `scripts/test_api_coverage.rb` rejects route and request-schema drift, legacy allowlists, policy escalation, classification drift, capability reassignment, undeclared profiles, referenced operations, malformed shapes, and stale inventory counts
 - [ ] Apache-2.0 `LICENSE` is present
 - [ ] prompt examples are reviewed by the Scarf team

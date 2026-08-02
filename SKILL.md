@@ -37,8 +37,9 @@ Before any state-changing call:
 3. Classify the operation with `references/access-policy.md`.
 4. For a standard mutation, treat the user's current explicit and unambiguous request as authorization. Ask only for missing values that materially affect the result.
 5. For a protected mutation, show the exact target and impact and obtain a fresh confirmation immediately before the call. A request to plan, reconcile, or generally manage resources is not confirmation.
-6. Execute one protected mutation at a time. Never run admin mutations concurrently, expand one confirmation to other targets, or combine an approved change with an unapproved one.
-7. Re-read the resource after success when possible. Report exactly what changed, the returned id, and any follow-up or rollback action.
+6. After confirmation and immediately before a protected call, re-read the resource or use an API precondition such as an ETag when supported. If material state, the target, or the resulting request body changed, stop, show the new diff, and obtain fresh confirmation.
+7. Execute one protected mutation at a time. Never run admin mutations concurrently, expand one confirmation to other targets, or combine an approved change with an unapproved one.
+8. Re-read the resource after success when possible. Report exactly what changed, the returned id, and any follow-up or rollback action.
 
 Protected mutations include:
 

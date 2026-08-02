@@ -120,12 +120,12 @@ Expected behavior:
 
 ### Stale confirmation
 
-Scenario: the user confirms updating `route_9`, but the target changes to `route_10` during preflight.
+Scenario: the user is shown route `route_9` changing from target A to C, but another actor changes its current target from A to B while confirmation is pending.
 
 Expected behavior:
 
-- Do not reuse the confirmation.
-- Present the new target and diff and request confirmation again.
+- Re-read immediately after confirmation or use an API precondition and detect the A-to-B change before writing.
+- Do not overwrite B with C or reuse the confirmation; present the new B-to-C diff and request confirmation again.
 
 ### Partial failure
 

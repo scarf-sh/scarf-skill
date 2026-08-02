@@ -10,6 +10,8 @@ DEFAULT_MAP = File.join(ROOT, "references", "api-map.json")
 DEFAULT_SPEC = "https://api.scarf.sh/static/api-v2.yaml"
 DEFAULT_INVENTORY = File.join(ROOT, "references", "api-v2-endpoint-inventory.md")
 HTTP_METHODS = %w[get put post delete options head patch trace].freeze
+EXPECTED_TOP_LEVEL_KEYS = %w[capabilities deploymentProfiles policy publicOperationManifest source version].freeze
+EXPECTED_SOURCE_KEYS = %w[asOf operationCount url].freeze
 EXPECTED_POLICY_KEYS = %w[adminRequiresExplicitEnablement adminScope combineDeploymentProfilesByDefault defaultProfile protectedConditions protectedMutations readLikePost standardMutations].freeze
 APPROVED_READ_LIKE_OPERATIONS = [
   ["search", "POST", "/v2/search"],
@@ -39,6 +41,8 @@ EXPECTED_INVENTORY_SECTIONS = [
   "Organizations", "Packages", "Search", "Tracking Pixels", "Users", "v3 Insights and AI"
 ].freeze
 EXPECTED_INVENTORY_SECTION_DIGEST = "a4d1d1b86ed3e9f151b15f324ab8769bacbbcb6bd68caf5515ebb17b5fa75f58"
+EXPECTED_NON_GET_REQUEST_SCHEMA_DIGEST = "08f84df646eae15908fd7001a65266402796b087bfdd2a94b4b2f7c1d8d9d22b"
+NON_SEMANTIC_SCHEMA_KEYS = %w[description example examples externalDocs summary title].freeze
 
 map_path = ARGV[0] || DEFAULT_MAP
 spec_source = ARGV[1] || DEFAULT_SPEC
@@ -56,6 +60,21 @@ end
 
 def tuple_digest(tuples)
   Digest::SHA256.hexdigest(JSON.generate(tuples.sort))
+end
+
+def canonicalize_schema(value)
+  case value
+  when Hash
+    value.keys.sort.each_with_object({}) do |key, result|
+      next if NON_SEMANTIC_SCHEMA_KEYS.include?(key)
+
+      result[key] = canonicalize_schema(value.fetch(key))
+    end
+  when Array
+    value.map { |entry| canonicalize_schema(entry) }
+  else
+    value
+  end
 end
 
 def capability_digest(capabilities)
@@ -84,6 +103,34 @@ def resolve_json_pointer(document, reference)
   end
 end
 
+def collect_local_references(document, value, targets = {}, visited = {})
+  case value
+  when Hash
+    if value.key?("$ref")
+      reference = value.fetch("$ref")
+      target = canonicalize_schema(resolve_json_pointer(document, reference))
+      targets[reference] = target
+      unless visited[reference]
+        visited[reference] = true
+        collect_local_references(document, target, targets, visited)
+      end
+    end
+    value.each_value { |child| collect_local_references(document, child, targets, visited) }
+  when Array
+    value.each { |child| collect_local_references(document, child, targets, visited) }
+  end
+  targets
+end
+
+def request_schema_signature(document, path_item, operation)
+  fragment = canonicalize_schema(
+    "parameters" => (path_item["parameters"] || []) + (operation["parameters"] || []),
+    "requestBody" => operation["requestBody"]
+  )
+  references = collect_local_references(document, fragment)
+  [fragment, canonicalize_schema(references)]
+end
+
 def resolve_path_item(document, path_item)
   resolved = path_item
   visited = []
@@ -106,11 +153,16 @@ map = JSON.parse(File.read(map_path))
 spec = YAML.safe_load(read_source(spec_source), aliases: true)
 
 operations = []
+non_get_request_schemas = []
 (spec["paths"] || {}).each do |path, path_item|
-  resolve_path_item(spec, path_item).each do |method, operation|
+  path_item = resolve_path_item(spec, path_item)
+  path_item.each do |method, operation|
     next unless HTTP_METHODS.include?(method)
 
     operations << [operation.fetch("operationId"), method.upcase, path]
+    unless method == "get"
+      non_get_request_schemas << [operation.fetch("operationId"), method.upcase, path, *request_schema_signature(spec, path_item, operation)]
+    end
   end
 end
 
@@ -160,6 +212,9 @@ end
 capability_operations = capabilities.values.select { |value| value.is_a?(Array) }.flatten
 
 errors = []
+errors << "top-level API map keys changed" unless map.keys.sort == EXPECTED_TOP_LEVEL_KEYS.sort
+errors << "API map version changed" unless map["version"] == "v2-public-api"
+errors << "source keys changed" unless map.fetch("source").keys.sort == EXPECTED_SOURCE_KEYS.sort
 errors << "source URL changed" unless map.dig("source", "url") == DEFAULT_SPEC
 errors << "policy keys changed" unless policy.keys.sort == EXPECTED_POLICY_KEYS.sort
 errors << "deployment profile keys changed" unless map.fetch("deploymentProfiles").keys.sort == %w[admin read]
@@ -167,6 +222,10 @@ errors << "source count is #{operation_ids.length}, map declares #{map.dig("sour
 errors << "OpenAPI operation IDs have duplicates: #{duplicates(operation_ids).join(", ")}" unless duplicates(operation_ids).empty?
 errors << "manifest has duplicate operation IDs: #{duplicates(manifest_ids).join(", ")}" unless duplicates(manifest_ids).empty?
 errors << "published operation routes changed" unless tuple_digest(operations) == EXPECTED_PUBLIC_OPERATION_DIGEST
+request_schema_digest = Digest::SHA256.hexdigest(JSON.generate(non_get_request_schemas.sort_by { |entry| entry.first(3) }))
+unless request_schema_digest == EXPECTED_NON_GET_REQUEST_SCHEMA_DIGEST
+  errors << "policy-relevant request schemas changed (#{request_schema_digest})"
+end
 errors << "manifest is missing: #{(operation_ids - manifest_ids).join(", ")}" unless (operation_ids - manifest_ids).empty?
 errors << "manifest has unknown operations: #{(manifest_ids - operation_ids).join(", ")}" unless (manifest_ids - operation_ids).empty?
 errors << "inventory declares #{inventory_total.inspect}, contains #{inventory_operations.length}" unless inventory_total == inventory_operations.length

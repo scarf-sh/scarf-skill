@@ -157,6 +157,30 @@ cases = [
     map["policy"]["retainAdminForSession"] = true
     inventory
   end],
+  ["legacy top-level allowlist", "top-level API map keys changed", lambda do |map, _spec, inventory|
+    map["explicitAllowlist"] = copy(map["publicOperationManifest"])
+    inventory
+  end],
+  ["map version drift", "API map version changed", lambda do |map, _spec, inventory|
+    map["version"] = "v3-public-api"
+    inventory
+  end],
+  ["source schema drift", "source keys changed", lambda do |map, _spec, inventory|
+    map["source"]["legacyUrl"] = "https://example.com/legacy.yaml"
+    inventory
+  end],
+  ["policy parameter rename", "policy-relevant request schemas changed", lambda do |_map, spec, inventory|
+    spec.dig("components", "parameters", "insights_filter_scope")["name"] = "visibility"
+    inventory
+  end],
+  ["policy parameter schema drift", "policy-relevant request schemas changed", lambda do |_map, spec, inventory|
+    spec.dig("components", "schemas", "FilterScope")["default"] = "global"
+    inventory
+  end],
+  ["referenced request-body drift", "policy-relevant request schemas changed", lambda do |_map, spec, inventory|
+    spec.dig("components", "schemas", "CreateCollection", "required").delete("pattern")
+    inventory
+  end],
   ["source URL drift", "source URL changed", lambda do |map, _spec, inventory|
     map.dig("source", "url").replace("https://example.com/spec.yaml")
     inventory
