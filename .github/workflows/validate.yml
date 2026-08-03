@@ -37,6 +37,7 @@ jobs:
             ruby -c "$file"
           done
           ruby scripts/check_skill_structure.rb
+          ruby scripts/test_skill_structure.rb
           jq empty references/api-map.json
 
       - name: Check API coverage

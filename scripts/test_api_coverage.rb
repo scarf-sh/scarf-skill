@@ -73,6 +73,10 @@ cases = [
     spec.dig("paths", "/v2/search")["head"] = { "operationId" => "searchHead" }
     inventory
   end],
+  ["OpenAPI version drift", "OpenAPI version changed", lambda do |_map, spec, inventory|
+    spec["openapi"] = "3.1.0"
+    inventory
+  end],
   ["referenced new operation", "source count is", lambda do |_map, spec, inventory|
     spec["components"] ||= {}
     spec["components"]["pathItems"] = { "Synthetic" => { "head" => { "operationId" => "syntheticHead" } } }
@@ -303,6 +307,12 @@ raw_cases = [
         "      operationId: listInsightsFilters",
         "      <<: *shared_operation\n      operationId: listInsightsFilters"
       )
+  ],
+  [
+    "multiple OpenAPI YAML documents",
+    "OpenAPI YAML must contain exactly one document",
+    base_map_text,
+    "#{base_spec_text}\n---\nopenapi: 3.1.0\npaths: {}\n"
   ]
 ]
 

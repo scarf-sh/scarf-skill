@@ -10,6 +10,7 @@ DEFAULT_MAP = File.join(ROOT, "references", "api-map.json")
 DEFAULT_SPEC = "https://api.scarf.sh/static/api-v2.yaml"
 DEFAULT_INVENTORY = File.join(ROOT, "references", "api-v2-endpoint-inventory.md")
 EXPECTED_API_SERVER = "https://api.scarf.sh"
+EXPECTED_OPENAPI_VERSION = "3.0.3"
 EXPECTED_AUTH_DESCRIPTION_DIGEST = "8e396c45ea1c55c7f3734d9dd4fc989f212122259625b1efe1767aff26b6022b"
 EXPECTED_SECURITY_SCHEMES = {
   "ApiToken" => {
@@ -221,7 +222,12 @@ map_text = File.read(map_path)
 spec_text = read_source(spec_source)
 begin
   map = JSON.parse(map_text, object_class: DuplicateKeyHash)
-  validate_yaml_mapping_keys!(Psych.parse_stream(spec_text))
+  yaml_stream = Psych.parse_stream(spec_text)
+  raise "OpenAPI YAML must contain exactly one document" unless yaml_stream.children.length == 1
+  unless yaml_stream.children.first.root.is_a?(Psych::Nodes::Mapping)
+    raise "OpenAPI YAML document must be a mapping"
+  end
+  validate_yaml_mapping_keys!(yaml_stream)
   spec = YAML.safe_load(spec_text, aliases: true)
 rescue JSON::ParserError, Psych::SyntaxError, RuntimeError => error
   warn error.message
@@ -305,6 +311,7 @@ end
 capability_operations = capabilities.values.select { |value| value.is_a?(Array) }.flatten
 
 errors = []
+errors << "OpenAPI version changed" unless spec["openapi"] == EXPECTED_OPENAPI_VERSION
 errors << "top-level API map keys changed" unless map.keys.sort == EXPECTED_TOP_LEVEL_KEYS.sort
 errors << "API map version changed" unless map["version"] == "v2-public-api"
 errors << "source keys changed" unless map.fetch("source").keys.sort == EXPECTED_SOURCE_KEYS.sort

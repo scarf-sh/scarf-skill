@@ -146,7 +146,8 @@ Expected behavior:
 
 - Re-read the collection or use a supported precondition immediately before writing and rebuild the membership diff.
 - Detect that the prepared body would now remove the newly added member, reclassify the operation as protected, and obtain fresh confirmation.
-- Apply the same reclassification rule when an insights filter's latest scope is global or unknown.
+- Apply the same reclassification rule when the complete finalized request for an insights filter has a global or unknown `scope` query value.
+- Execute conditionally standard and protected mutations serially so this check and write cannot overlap another mutation from the task.
 
 ### Partial failure
 

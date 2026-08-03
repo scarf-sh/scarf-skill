@@ -33,7 +33,7 @@ Do not call undocumented internal endpoints. When the published spec changes, up
 
 - Keep reads as the default profile.
 - Scope admin authorization to one explicit task.
-- Pre-read and classify, re-evaluate conditionally standard mutations immediately before writing, confirm protected operations, revalidate existing resources or creation context immediately after confirmation, serialize protected calls, and post-read.
+- Pre-read and classify, re-evaluate conditionally standard mutations against the complete request immediately before writing, confirm protected operations, revalidate existing resources or creation context immediately after confirmation, serialize every admin mutation, and post-read.
 - Treat all deletes, routing changes, access-control changes, imports, recurring exports, org-wide state, and ambiguous or broad changes as protected.
 - Never retry an ambiguous non-idempotent call without checking whether it succeeded.
 

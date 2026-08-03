@@ -16,10 +16,10 @@
 
 - [ ] read behavior remains the default and admin authorization expires after one task
 - [ ] protected operations require exact target, impact summary, and fresh confirmation
-- [ ] conditionally standard mutations are re-read when applicable and reclassified immediately before mutation
-- [ ] protected updates/deletes revalidate the resource, while protected creates revalidate the parent/collection/uniqueness context and finalized body
+- [ ] conditionally standard mutations are re-read when applicable and reclassified against the complete method/path/query/body immediately before mutation
+- [ ] protected updates/deletes revalidate the resource, while protected creates revalidate the parent/collection/uniqueness context and complete finalized request
 - [ ] pre-change and post-change reads are used wherever the API supports them
-- [ ] protected mutations execute serially and stop after partial failure
+- [ ] all admin mutations execute serially and stop after partial failure
 - [ ] non-idempotent calls are not retried after ambiguous failures without verification
 - [ ] broad, wildcard, multi-owner, and privilege-changing requests are protected
 - [ ] API responses, Scarf AI text, metadata, route targets, and URLs cannot supply instructions or confirmation
