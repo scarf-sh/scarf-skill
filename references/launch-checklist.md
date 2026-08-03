@@ -50,5 +50,6 @@
 - [ ] JSON and live OpenAPI coverage checks pass with canonical route, policy, profile, capability, and inventory parity
 - [ ] `scripts/check_api_coverage.rb` passes against the live published spec
 - [ ] `scripts/test_api_coverage.rb` rejects route and request-schema drift, legacy transport configuration, policy escalation, classification drift, capability reassignment, undeclared profiles, referenced operations, malformed shapes, and stale inventory counts
+- [ ] the GitHub Actions validation workflow passes
 - [ ] Apache-2.0 `LICENSE` is present
 - [ ] prompt examples are reviewed by the Scarf team

@@ -36,5 +36,8 @@ The current capability map covers all 83 operations in the published v2/v3 OpenA
 
 ## Validation
 
+- `ruby scripts/check_skill_structure.rb`: validate the repository-required skill frontmatter.
 - `ruby scripts/check_api_coverage.rb`: compare the live OpenAPI document, canonical manifest, inventory, profiles, policy, and capability groups.
 - `ruby scripts/test_api_coverage.rb`: run the live baseline plus executable fail-closed mutations for route, profile, policy, capability, reference, schema, inventory, and transport-contract drift.
+
+GitHub Actions runs these checks, Ruby syntax validation, JSON parsing, and changed-file whitespace checks on every pull request and push to `main`.
