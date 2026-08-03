@@ -369,4 +369,4 @@ unless !readme_count_success && readme_count_output.include?("README operation c
 end
 
 abort failures.join("\n\n") unless failures.empty?
-puts "API coverage mutation tests OK: baseline plus #{cases.length + raw_cases.length + 4} fail-closed scenarios"
+puts "API coverage mutation tests OK: baseline plus #{cases.length + raw_cases.length + 3} fail-closed scenarios"
