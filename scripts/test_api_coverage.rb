@@ -233,6 +233,9 @@ cases = [
   ["inventory section membership drift", "inventory section membership changed", lambda do |_map, _spec, inventory|
     swap_inventory_rows(inventory, "getCollections", "exportCompanyRollup")
   end],
+  ["inventory pagination instruction drift", "inventory instructions changed without review", lambda do |_map, _spec, inventory|
+    inventory.sub("Always pass an explicit `?per_page=N`", "Optionally pass an explicit `?per_page=N`")
+  end],
   ["policy schema drift", "policy keys changed", lambda do |map, _spec, inventory|
     map["policy"]["retainAdminForSession"] = true
     inventory

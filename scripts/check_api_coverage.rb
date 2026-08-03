@@ -25,6 +25,7 @@ EXPECTED_CAPABILITY_SPEC_DIGEST = "9ee6477dcf7ececdfe868d407c66354057a822173e5f1
 EXPECTED_FILTER_CATALOG_DIGEST = "9ff38fc1f8fadfa1f2db2e437990471c1d5de2f1a79f560bec4e1fcc4b8a4fcd"
 EXPECTED_PROMPT_EXAMPLES_DIGEST = "8e5a8f9ac36ec8a427bdedd443e04cb380e86eea9745e5006812e8c1aa56a945"
 EXPECTED_LAUNCH_CHECKLIST_DIGEST = "ecd953a94bb4e8bfc8fcebaa0571eeba07ac093437c1c424f96f2515d0918357"
+EXPECTED_INVENTORY_DIGEST = "68dbd8a8b7d18eeebd7674407895b6bd7abefe26201f49fa11de2cb20a1d0f50"
 EXPECTED_AUTH_DESCRIPTION_DIGEST = "8e396c45ea1c55c7f3734d9dd4fc989f212122259625b1efe1767aff26b6022b"
 EXPECTED_SECURITY_SCHEMES = {
   "ApiToken" => {
@@ -379,6 +380,7 @@ errors << "capability spec changed without review" unless Digest::SHA256.hexdige
 errors << "filter catalog changed without review" unless Digest::SHA256.hexdigest(filter_catalog_text) == EXPECTED_FILTER_CATALOG_DIGEST
 errors << "prompt examples changed without review" unless Digest::SHA256.hexdigest(prompt_examples_text) == EXPECTED_PROMPT_EXAMPLES_DIGEST
 errors << "launch checklist changed without review" unless Digest::SHA256.hexdigest(launch_checklist_text) == EXPECTED_LAUNCH_CHECKLIST_DIGEST
+errors << "inventory instructions changed without review" unless Digest::SHA256.hexdigest(inventory_text) == EXPECTED_INVENTORY_DIGEST
 errors << "public API server changed" unless spec.fetch("servers", []).map { |server| server["url"] } == [EXPECTED_API_SERVER]
 errors << "path-level server overrides are not allowed: #{path_server_overrides.join(", ")}" unless path_server_overrides.empty?
 unless operation_server_overrides.empty?
