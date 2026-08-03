@@ -41,18 +41,20 @@ def run_checker(map, spec, inventory)
     map_path = File.join(directory, "map.json")
     spec_path = File.join(directory, "spec.yaml")
     inventory_path = File.join(directory, "inventory.md")
-    File.write(map_path, JSON.pretty_generate(map))
-    File.write(spec_path, YAML.dump(spec))
+    File.write(map_path, map.is_a?(String) ? map : JSON.pretty_generate(map))
+    File.write(spec_path, spec.is_a?(String) ? spec : YAML.dump(spec))
     File.write(inventory_path, inventory)
     stdout, stderr, status = Open3.capture3(RbConfig.ruby, CHECKER, map_path, spec_path, inventory_path)
     [stdout + stderr, status.success?]
   end
 end
 
-base_map = JSON.parse(File.read(MAP_PATH))
-base_spec = YAML.safe_load(URI.open(SPEC_URL, &:read), aliases: true)
+base_map_text = File.read(MAP_PATH)
+base_spec_text = URI.open(SPEC_URL, &:read)
+base_map = JSON.parse(base_map_text)
+base_spec = YAML.safe_load(base_spec_text, aliases: true)
 base_inventory = File.read(INVENTORY_PATH)
-baseline_output, baseline_success = run_checker(base_map, base_spec, base_inventory)
+baseline_output, baseline_success = run_checker(base_map_text, base_spec_text, base_inventory)
 abort "baseline coverage check failed:\n#{baseline_output}" unless baseline_success
 
 cases = [
@@ -75,6 +77,21 @@ cases = [
     spec["components"] ||= {}
     spec["components"]["pathItems"] = { "Synthetic" => { "head" => { "operationId" => "syntheticHead" } } }
     spec["paths"]["/v2/synthetic"] = { "$ref" => "#/components/pathItems/Synthetic" }
+    inventory
+  end],
+  ["referenced path-item method conflict", "conflicting path-item reference siblings", lambda do |_map, spec, inventory|
+    spec["components"] ||= {}
+    spec["components"]["pathItems"] = { "Conflict" => { "get" => { "operationId" => "targetGet" } } }
+    spec["paths"]["/v2/conflict"] = {
+      "$ref" => "#/components/pathItems/Conflict",
+      "get" => { "operationId" => "siblingGet" }
+    }
+    inventory
+  end],
+  ["referenced path-item parameter conflict", "conflicting path-item reference siblings", lambda do |_map, spec, inventory|
+    spec["components"] ||= {}
+    spec["components"]["pathItems"] = { "Conflict" => { "parameters" => [] } }
+    spec["paths"]["/v2/conflict"] = { "$ref" => "#/components/pathItems/Conflict", "parameters" => [] }
     inventory
   end],
   ["external path-item reference", "unsupported external path-item reference", lambda do |_map, spec, inventory|
@@ -245,5 +262,54 @@ cases.each do |label, expected, mutation|
   failures << "#{label}: expected #{expected.inspect}; success=#{success}\n#{output}" unless !success && output.include?(expected)
 end
 
+raw_cases = [
+  [
+    "duplicate top-level API map key",
+    "duplicate JSON key: executionProfiles",
+    base_map_text.sub(
+      "  \"executionProfiles\": {",
+      "  \"executionProfiles\": {},\n  \"executionProfiles\": {"
+    ),
+    base_spec_text
+  ],
+  [
+    "duplicate nested API map key",
+    "duplicate JSON key: defaultProfile",
+    base_map_text.sub(
+      "    \"defaultProfile\": \"read\",",
+      "    \"defaultProfile\": \"admin\",\n    \"defaultProfile\": \"read\","
+    ),
+    base_spec_text
+  ],
+  [
+    "duplicate OpenAPI YAML key",
+    "duplicate YAML key:",
+    base_map_text,
+    base_spec_text.sub(
+      "      operationId: listInsightsFilters",
+      "      operationId: shadowListInsightsFilters\n      operationId: listInsightsFilters"
+    )
+  ],
+  [
+    "ambiguous OpenAPI YAML merge key",
+    "YAML merge keys are not allowed:",
+    base_map_text,
+    base_spec_text
+      .sub(
+        "openapi: 3.0.3",
+        "openapi: 3.0.3\nx-shared-operation: &shared_operation\n  operationId: shadowListInsightsFilters"
+      )
+      .sub(
+        "      operationId: listInsightsFilters",
+        "      <<: *shared_operation\n      operationId: listInsightsFilters"
+      )
+  ]
+]
+
+raw_cases.each do |label, expected, map, spec|
+  output, success = run_checker(map, spec, base_inventory)
+  failures << "#{label}: expected #{expected.inspect}; success=#{success}\n#{output}" unless !success && output.include?(expected)
+end
+
 abort failures.join("\n\n") unless failures.empty?
-puts "API coverage mutation tests OK: baseline plus #{cases.length} fail-closed scenarios"
+puts "API coverage mutation tests OK: baseline plus #{cases.length + raw_cases.length} fail-closed scenarios"

@@ -33,7 +33,7 @@ Do not call undocumented internal endpoints. When the published spec changes, up
 
 - Keep reads as the default profile.
 - Scope admin authorization to one explicit task.
-- Pre-read, classify, confirm protected operations, revalidate state or use a conditional request immediately after confirmation, serialize protected calls, and post-read.
+- Pre-read and classify, re-evaluate conditionally standard mutations immediately before writing, confirm protected operations, revalidate existing resources or creation context immediately after confirmation, serialize protected calls, and post-read.
 - Treat all deletes, routing changes, access-control changes, imports, recurring exports, org-wide state, and ambiguous or broad changes as protected.
 - Never retry an ambiguous non-idempotent call without checking whether it succeeded.
 
@@ -42,7 +42,7 @@ Do not call undocumented internal endpoints. When the published spec changes, up
 Validate:
 
 - local skill structure and frontmatter;
-- JSON schema, unique operation ids and tuples, canonical operation ID/method/path bindings, request parameters and transitive request-body schemas for every operation, and exact OpenAPI coverage;
+- duplicate-free JSON/YAML, unique operation ids and tuples, unambiguous referenced path items, canonical operation ID/method/path bindings, request parameters and transitive request-body schemas for every operation, and exact OpenAPI coverage;
 - the canonical API server with no path- or operation-level overrides, plus the documented Bearer scheme and exact global/path/operation security state;
 - read/admin classification for every non-`GET` operation;
 - prompt behavior for safe reads, standard mutations, protected mutations, stale confirmation, partial failure, schema drift, and standalone API execution;

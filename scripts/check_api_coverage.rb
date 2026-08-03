@@ -59,6 +59,14 @@ EXPECTED_INVENTORY_SECTIONS = [
 EXPECTED_INVENTORY_SECTION_DIGEST = "a4d1d1b86ed3e9f151b15f324ab8769bacbbcb6bd68caf5515ebb17b5fa75f58"
 EXPECTED_REQUEST_SCHEMA_DIGEST = "3804333f948d005e642a58a69578378e427c3011e494919c107c8ee876b3dc30"
 
+class DuplicateKeyHash < Hash
+  def []=(key, value)
+    raise JSON::ParserError, "duplicate JSON key: #{key}" if key?(key)
+
+    super
+  end
+end
+
 map_path = ARGV[0] || DEFAULT_MAP
 spec_source = ARGV[1] || DEFAULT_SPEC
 inventory_path = ARGV[2] || DEFAULT_INVENTORY
@@ -67,6 +75,28 @@ def read_source(source)
   return URI.open(source, &:read) if source.match?(%r{\Ahttps?://})
 
   File.read(source)
+end
+
+def validate_yaml_mapping_keys!(node, path = [])
+  case node
+  when Psych::Nodes::Mapping
+    seen = {}
+    node.children.each_slice(2) do |key_node, value_node|
+      raise "non-scalar YAML mapping key at #{path.join(".")}" unless key_node.is_a?(Psych::Nodes::Scalar)
+
+      key = key_node.value
+      location = (path + [key]).join(".")
+      raise "YAML merge keys are not allowed: #{location}" if key == "<<"
+      raise "duplicate YAML key: #{location}" if seen[key]
+
+      seen[key] = true
+      validate_yaml_mapping_keys!(value_node, path + [key])
+    end
+  when Psych::Nodes::Sequence
+    node.children.each_with_index { |child, index| validate_yaml_mapping_keys!(child, path + [index.to_s]) }
+  when Psych::Nodes::Stream, Psych::Nodes::Document
+    node.children.each { |child| validate_yaml_mapping_keys!(child, path) }
+  end
 end
 
 def duplicates(values)
@@ -175,14 +205,28 @@ def resolve_path_item(document, path_item)
     target = resolve_json_pointer(document, reference)
     raise "path-item reference is not an object: #{reference}" unless target.is_a?(Hash)
 
-    resolved = target.merge(resolved.reject { |key, _value| key == "$ref" })
+    siblings = resolved.reject { |key, _value| key == "$ref" }
+    conflicts = target.keys & siblings.keys
+    unless conflicts.empty?
+      raise "conflicting path-item reference siblings for #{reference}: #{conflicts.sort.join(", ")}"
+    end
+
+    resolved = target.merge(siblings)
   end
 
   resolved
 end
 
-map = JSON.parse(File.read(map_path))
-spec = YAML.safe_load(read_source(spec_source), aliases: true)
+map_text = File.read(map_path)
+spec_text = read_source(spec_source)
+begin
+  map = JSON.parse(map_text, object_class: DuplicateKeyHash)
+  validate_yaml_mapping_keys!(Psych.parse_stream(spec_text))
+  spec = YAML.safe_load(spec_text, aliases: true)
+rescue JSON::ParserError, Psych::SyntaxError, RuntimeError => error
+  warn error.message
+  exit 1
+end
 
 operations = []
 request_schemas = []

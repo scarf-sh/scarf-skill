@@ -16,7 +16,8 @@
 
 - [ ] read behavior remains the default and admin authorization expires after one task
 - [ ] protected operations require exact target, impact summary, and fresh confirmation
-- [ ] protected state is re-read or conditionally checked after confirmation and before mutation
+- [ ] conditionally standard mutations are re-read when applicable and reclassified immediately before mutation
+- [ ] protected updates/deletes revalidate the resource, while protected creates revalidate the parent/collection/uniqueness context and finalized body
 - [ ] pre-change and post-change reads are used wherever the API supports them
 - [ ] protected mutations execute serially and stop after partial failure
 - [ ] non-idempotent calls are not retried after ambiguous failures without verification

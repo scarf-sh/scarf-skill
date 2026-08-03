@@ -44,13 +44,14 @@ The published document currently labels four v3 operation security requirements 
 Before any state-changing call:
 
 1. Resolve the exact organization, resource type, resource id or name, method, path, query, and body.
-2. Read the current resource first when a corresponding `GET` exists. Summarize the material before/after difference and retain the returned identifiers for verification.
+2. Read the current resource first when a corresponding `GET` exists. For a create, read the relevant parent, collection, or uniqueness lookup when available. Summarize the material before/after difference and retain the returned identifiers for verification.
 3. Classify the operation with `references/access-policy.md`.
 4. For a standard mutation, treat the user's current explicit and unambiguous request as authorization. Ask only for missing values that materially affect the result.
-5. For a protected mutation, show the exact target and impact and obtain a fresh confirmation immediately before the call. A request to plan, reconcile, or generally manage resources is not confirmation.
-6. After confirmation and immediately before a protected call, re-read the resource or use an API precondition such as an ETag when supported. If material state, the target, or the resulting request body changed, stop, show the new diff, and obtain fresh confirmation.
-7. Execute one protected mutation at a time. Never run admin mutations concurrently, expand one confirmation to other targets, or combine an approved change with an unapproved one.
-8. Re-read the resource after success when possible. Report exactly what changed, the returned id, and any follow-up or rollback action.
+5. Immediately before any conditionally standard mutation, re-evaluate its protected predicate against the finalized request. For an update, also re-read the resource or use a supported precondition and rebuild the diff. If the latest state or body makes the operation protected, stop and follow the protected flow.
+6. For a protected mutation, show the exact target and impact and obtain a fresh confirmation immediately before the call. A request to plan, reconcile, or generally manage resources is not confirmation.
+7. After confirmation, revalidate immediately before the protected call. For an update or delete, re-read the resource or use a supported precondition such as an ETag. For a create, re-read the relevant parent, collection, or uniqueness lookup when available and verify that the exact target and finalized body still match the confirmation; the absence of a pre-existing resource does not block creation. If material state, target, impact, or body changed, stop, show the new diff, and obtain fresh confirmation.
+8. Execute the mutation. Run only one protected mutation at a time; never run protected calls concurrently, expand one confirmation to other targets, or combine an approved change with an unapproved one.
+9. Re-read the resource after success when possible. Report exactly what changed, the returned id, and any follow-up or rollback action.
 
 Protected mutations include:
 
