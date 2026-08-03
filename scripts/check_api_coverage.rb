@@ -9,8 +9,10 @@ ROOT = File.expand_path("..", __dir__)
 DEFAULT_MAP = File.join(ROOT, "references", "api-map.json")
 DEFAULT_SPEC = "https://api.scarf.sh/static/api-v2.yaml"
 DEFAULT_INVENTORY = File.join(ROOT, "references", "api-v2-endpoint-inventory.md")
+DEFAULT_README = File.join(ROOT, "README.md")
 EXPECTED_API_SERVER = "https://api.scarf.sh"
 EXPECTED_OPENAPI_VERSION = "3.0.3"
+EXPECTED_SOURCE_AS_OF = "2026-08-02"
 EXPECTED_AUTH_DESCRIPTION_DIGEST = "8e396c45ea1c55c7f3734d9dd4fc989f212122259625b1efe1767aff26b6022b"
 EXPECTED_SECURITY_SCHEMES = {
   "ApiToken" => {
@@ -71,6 +73,7 @@ end
 map_path = ARGV[0] || DEFAULT_MAP
 spec_source = ARGV[1] || DEFAULT_SPEC
 inventory_path = ARGV[2] || DEFAULT_INVENTORY
+readme_path = ARGV[3] || DEFAULT_README
 
 def read_source(source)
   return URI.open(source, &:read) if source.match?(%r{\Ahttps?://})
@@ -268,6 +271,9 @@ end
 operation_ids = operations.map(&:first)
 operation_by_id = operations.each_with_object({}) { |operation, result| result[operation.first] = operation }
 inventory_text = File.read(inventory_path)
+readme_text = File.read(readme_path)
+inventory_snapshot_date = inventory_text[/^- Snapshot checked on (\d{4}-\d{2}-\d{2})\.$/, 1]
+readme_snapshot_date = readme_text[/^The current capability map covers all \d+ operations .* as of (\d{4}-\d{2}-\d{2})\./, 1]
 inventory_sections = []
 current_inventory_section = nil
 inventory_operations = inventory_text.each_line.each_with_object([]) do |line, entries|
@@ -316,6 +322,9 @@ errors << "top-level API map keys changed" unless map.keys.sort == EXPECTED_TOP_
 errors << "API map version changed" unless map["version"] == "v2-public-api"
 errors << "source keys changed" unless map.fetch("source").keys.sort == EXPECTED_SOURCE_KEYS.sort
 errors << "source URL changed" unless map.dig("source", "url") == DEFAULT_SPEC
+errors << "source snapshot date changed" unless map.dig("source", "asOf") == EXPECTED_SOURCE_AS_OF
+errors << "inventory snapshot date does not match source" unless inventory_snapshot_date == map.dig("source", "asOf")
+errors << "README snapshot date does not match source" unless readme_snapshot_date == map.dig("source", "asOf")
 errors << "public API server changed" unless spec.fetch("servers", []).map { |server| server["url"] } == [EXPECTED_API_SERVER]
 errors << "path-level server overrides are not allowed: #{path_server_overrides.join(", ")}" unless path_server_overrides.empty?
 unless operation_server_overrides.empty?

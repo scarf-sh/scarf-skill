@@ -11,6 +11,7 @@ ROOT = File.expand_path("..", __dir__)
 CHECKER = File.join(__dir__, "check_api_coverage.rb")
 MAP_PATH = File.join(ROOT, "references", "api-map.json")
 INVENTORY_PATH = File.join(ROOT, "references", "api-v2-endpoint-inventory.md")
+README_PATH = File.join(ROOT, "README.md")
 SPEC_URL = "https://api.scarf.sh/static/api-v2.yaml"
 
 def copy(value)
@@ -36,15 +37,17 @@ def swap_inventory_rows(inventory, first_id, second_id)
   inventory.sub(first, "__SCARF_ROW_SWAP__\n").sub(second, first).sub("__SCARF_ROW_SWAP__\n", second)
 end
 
-def run_checker(map, spec, inventory)
+def run_checker(map, spec, inventory, readme)
   Dir.mktmpdir("scarf-coverage-test") do |directory|
     map_path = File.join(directory, "map.json")
     spec_path = File.join(directory, "spec.yaml")
     inventory_path = File.join(directory, "inventory.md")
+    readme_path = File.join(directory, "README.md")
     File.write(map_path, map.is_a?(String) ? map : JSON.pretty_generate(map))
     File.write(spec_path, spec.is_a?(String) ? spec : YAML.dump(spec))
     File.write(inventory_path, inventory)
-    stdout, stderr, status = Open3.capture3(RbConfig.ruby, CHECKER, map_path, spec_path, inventory_path)
+    File.write(readme_path, readme)
+    stdout, stderr, status = Open3.capture3(RbConfig.ruby, CHECKER, map_path, spec_path, inventory_path, readme_path)
     [stdout + stderr, status.success?]
   end
 end
@@ -54,7 +57,8 @@ base_spec_text = URI.open(SPEC_URL, &:read)
 base_map = JSON.parse(base_map_text)
 base_spec = YAML.safe_load(base_spec_text, aliases: true)
 base_inventory = File.read(INVENTORY_PATH)
-baseline_output, baseline_success = run_checker(base_map_text, base_spec_text, base_inventory)
+base_readme = File.read(README_PATH)
+baseline_output, baseline_success = run_checker(base_map_text, base_spec_text, base_inventory, base_readme)
 abort "baseline coverage check failed:\n#{baseline_output}" unless baseline_success
 
 cases = [
@@ -190,6 +194,13 @@ cases = [
     map["source"]["legacyUrl"] = "https://example.com/legacy.yaml"
     inventory
   end],
+  ["source snapshot drift", "source snapshot date changed", lambda do |map, _spec, inventory|
+    map["source"]["asOf"] = "2099-01-01"
+    inventory
+  end],
+  ["inventory snapshot drift", "inventory snapshot date does not match source", lambda do |_map, _spec, inventory|
+    inventory.sub("Snapshot checked on 2026-08-02", "Snapshot checked on 2099-01-01")
+  end],
   ["policy parameter rename", "request schemas changed", lambda do |_map, spec, inventory|
     spec.dig("components", "parameters", "insights_filter_scope")["name"] = "visibility"
     inventory
@@ -262,7 +273,7 @@ cases.each do |label, expected, mutation|
   map = copy(base_map)
   spec = copy(base_spec)
   inventory = mutation.call(map, spec, base_inventory.dup)
-  output, success = run_checker(map, spec, inventory)
+  output, success = run_checker(map, spec, inventory, base_readme)
   failures << "#{label}: expected #{expected.inspect}; success=#{success}\n#{output}" unless !success && output.include?(expected)
 end
 
@@ -317,9 +328,19 @@ raw_cases = [
 ]
 
 raw_cases.each do |label, expected, map, spec|
-  output, success = run_checker(map, spec, base_inventory)
+  output, success = run_checker(map, spec, base_inventory, base_readme)
   failures << "#{label}: expected #{expected.inspect}; success=#{success}\n#{output}" unless !success && output.include?(expected)
 end
 
+readme_output, readme_success = run_checker(
+  base_map_text,
+  base_spec_text,
+  base_inventory,
+  base_readme.sub("as of 2026-08-02", "as of 2099-01-01")
+)
+unless !readme_success && readme_output.include?("README snapshot date does not match source")
+  failures << "README snapshot drift: expected README snapshot mismatch; success=#{readme_success}\n#{readme_output}"
+end
+
 abort failures.join("\n\n") unless failures.empty?
-puts "API coverage mutation tests OK: baseline plus #{cases.length + raw_cases.length} fail-closed scenarios"
+puts "API coverage mutation tests OK: baseline plus #{cases.length + raw_cases.length + 1} fail-closed scenarios"
