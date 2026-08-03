@@ -351,9 +351,19 @@ duplicate_readme_output, duplicate_readme_success = run_checker(
   base_inventory,
   "#{base_readme}\nThe current capability map covers all 83 operations in the published API as of 2099-01-01.\n"
 )
-unless !duplicate_readme_success && duplicate_readme_output.include?("README must contain exactly one snapshot date")
+unless !duplicate_readme_success && duplicate_readme_output.include?("README must contain exactly one snapshot declaration")
   failures << "duplicate README snapshot: expected duplicate snapshot rejection; success=#{duplicate_readme_success}\n#{duplicate_readme_output}"
 end
 
+readme_count_output, readme_count_success = run_checker(
+  base_map_text,
+  base_spec_text,
+  base_inventory,
+  base_readme.sub("covers all 83 operations", "covers all 82 operations")
+)
+unless !readme_count_success && readme_count_output.include?("README operation count does not match source")
+  failures << "README operation count drift: expected count mismatch; success=#{readme_count_success}\n#{readme_count_output}"
+end
+
 abort failures.join("\n\n") unless failures.empty?
-puts "API coverage mutation tests OK: baseline plus #{cases.length + raw_cases.length + 2} fail-closed scenarios"
+puts "API coverage mutation tests OK: baseline plus #{cases.length + raw_cases.length + 3} fail-closed scenarios"

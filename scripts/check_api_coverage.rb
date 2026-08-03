@@ -273,7 +273,8 @@ operation_by_id = operations.each_with_object({}) { |operation, result| result[o
 inventory_text = File.read(inventory_path)
 readme_text = File.read(readme_path)
 inventory_snapshot_dates = inventory_text.scan(/^- Snapshot checked on (\d{4}-\d{2}-\d{2})\.$/).flatten
-readme_snapshot_dates = readme_text.scan(/^The current capability map covers all \d+ operations .* as of (\d{4}-\d{2}-\d{2})\./).flatten
+readme_snapshot_declarations = readme_text.scan(/^The current capability map covers all (\d+) operations .* as of (\d{4}-\d{2}-\d{2})\./)
+readme_operation_count, readme_snapshot_date = readme_snapshot_declarations.one? ? readme_snapshot_declarations.first : [nil, nil]
 inventory_sections = []
 current_inventory_section = nil
 inventory_operations = inventory_text.each_line.each_with_object([]) do |line, entries|
@@ -324,9 +325,10 @@ errors << "source keys changed" unless map.fetch("source").keys.sort == EXPECTED
 errors << "source URL changed" unless map.dig("source", "url") == DEFAULT_SPEC
 errors << "source snapshot date changed" unless map.dig("source", "asOf") == EXPECTED_SOURCE_AS_OF
 errors << "inventory must contain exactly one snapshot date" unless inventory_snapshot_dates.length == 1
-errors << "README must contain exactly one snapshot date" unless readme_snapshot_dates.length == 1
+errors << "README must contain exactly one snapshot declaration" unless readme_snapshot_declarations.length == 1
 errors << "inventory snapshot date does not match source" unless inventory_snapshot_dates == [map.dig("source", "asOf")]
-errors << "README snapshot date does not match source" unless readme_snapshot_dates == [map.dig("source", "asOf")]
+errors << "README snapshot date does not match source" unless readme_snapshot_date == map.dig("source", "asOf")
+errors << "README operation count does not match source" unless readme_operation_count&.to_i == map.dig("source", "operationCount")
 errors << "public API server changed" unless spec.fetch("servers", []).map { |server| server["url"] } == [EXPECTED_API_SERVER]
 errors << "path-level server overrides are not allowed: #{path_server_overrides.join(", ")}" unless path_server_overrides.empty?
 unless operation_server_overrides.empty?
