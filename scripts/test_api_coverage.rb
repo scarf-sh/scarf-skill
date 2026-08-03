@@ -201,6 +201,9 @@ cases = [
   ["inventory snapshot drift", "inventory snapshot date does not match source", lambda do |_map, _spec, inventory|
     inventory.sub("Snapshot checked on 2026-08-02", "Snapshot checked on 2099-01-01")
   end],
+  ["duplicate inventory snapshot", "inventory must contain exactly one snapshot date", lambda do |_map, _spec, inventory|
+    "#{inventory}\n- Snapshot checked on 2099-01-01.\n"
+  end],
   ["policy parameter rename", "request schemas changed", lambda do |_map, spec, inventory|
     spec.dig("components", "parameters", "insights_filter_scope")["name"] = "visibility"
     inventory
@@ -342,5 +345,15 @@ unless !readme_success && readme_output.include?("README snapshot date does not 
   failures << "README snapshot drift: expected README snapshot mismatch; success=#{readme_success}\n#{readme_output}"
 end
 
+duplicate_readme_output, duplicate_readme_success = run_checker(
+  base_map_text,
+  base_spec_text,
+  base_inventory,
+  "#{base_readme}\nThe current capability map covers all 83 operations in the published API as of 2099-01-01.\n"
+)
+unless !duplicate_readme_success && duplicate_readme_output.include?("README must contain exactly one snapshot date")
+  failures << "duplicate README snapshot: expected duplicate snapshot rejection; success=#{duplicate_readme_success}\n#{duplicate_readme_output}"
+end
+
 abort failures.join("\n\n") unless failures.empty?
-puts "API coverage mutation tests OK: baseline plus #{cases.length + raw_cases.length + 1} fail-closed scenarios"
+puts "API coverage mutation tests OK: baseline plus #{cases.length + raw_cases.length + 2} fail-closed scenarios"
