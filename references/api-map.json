@@ -9,7 +9,7 @@
     "defaultProfile": "read",
     "adminScope": "single-explicit-task",
     "adminRequiresExplicitEnablement": true,
-    "combineDeploymentProfilesByDefault": false,
+    "combineExecutionProfilesByDefault": false,
     "readLikePost": [
       "search",
       "chat_with_scarf_ai"
@@ -167,7 +167,7 @@
       "create_negative_endpoint_feedback"
     ]
   },
-  "deploymentProfiles": {
+  "executionProfiles": {
     "read": [
       "listInsightsFilters",
       "getInsightsFilter",

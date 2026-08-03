@@ -1,6 +1,6 @@
 # scarf-skill
 
-Scarf skill for analytics, Dependency Radar, and administration across the published Scarf API.
+Standalone Scarf skill for analytics, Dependency Radar, and administration across the published Scarf API.
 
 ## Access model
 
@@ -9,7 +9,7 @@ The skill separates work into two request-scoped profiles:
 - **Read:** public `GET` routes plus the read-like search and Scarf AI chat `POST` routes.
 - **Admin:** public state-changing routes for packages, Scarf Gateway domains and routes, tracking pixels, collections, scheduled exports, filters, organization members and permissions, and event imports.
 
-Admin access is default-deny at the MCP layer. Deploy the read allowlist by default and expose the separate admin allowlist only through explicit configuration. The skill adds behavioral guardrails: exact target resolution, pre-change reads, fresh confirmation for protected operations, serialized mutations, and post-change verification. A skill is not a security boundary; production deployments should also use least-privileged, separate read/admin credentials where possible.
+The skill calls `https://api.scarf.sh` directly over authenticated HTTPS with a user-provided `SCARF_API_TOKEN`; it does not require a Scarf-specific tool or server. The read execution profile is the default, and admin behavior is activated only for the current explicit task. Guardrails include exact target resolution, pre-change reads, fresh confirmation for protected operations, serialized mutations, and post-change verification. A skill is not a security boundary, so use least-privileged and separate read/admin credentials where the API and deployment support them.
 
 The current capability map covers all 83 operations in the published v2/v3 OpenAPI document as of 2026-08-02. The release checker independently pins every operation ID to its approved HTTP method and path so policy assignments cannot silently move to another route.
 
@@ -27,7 +27,7 @@ The current capability map covers all 83 operations in the published v2/v3 OpenA
 ## References
 
 - `references/access-policy.md`: read/admin isolation and confirmation policy
-- `references/api-map.json`: full public operation-ID manifest plus separate read/admin deployment profiles
+- `references/api-map.json`: full public operation-ID manifest plus separate read/admin execution profiles
 - `references/api-v2-endpoint-inventory.md`: published endpoint catalog
 - `references/filter-catalog.md`: insights-filter schema and examples
 - `references/prompt-examples.md`: behavioral acceptance cases
@@ -37,4 +37,4 @@ The current capability map covers all 83 operations in the published v2/v3 OpenA
 ## Validation
 
 - `ruby scripts/check_api_coverage.rb`: compare the live OpenAPI document, canonical manifest, inventory, profiles, policy, and capability groups.
-- `ruby scripts/test_api_coverage.rb`: run the live baseline plus executable fail-closed mutations for route, profile, policy, capability, reference, schema, and inventory drift.
+- `ruby scripts/test_api_coverage.rb`: run the live baseline plus executable fail-closed mutations for route, profile, policy, capability, reference, schema, inventory, and transport-contract drift.

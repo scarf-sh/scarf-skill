@@ -93,8 +93,8 @@ cases = [
   ["protected DELETE moved to read", "read-like operation IDs changed", lambda do |map, _spec, inventory|
     map.dig("policy", "protectedMutations").delete("deletePackage")
     map.dig("policy", "readLikePost") << "deletePackage"
-    map.dig("deploymentProfiles", "admin").delete("deletePackage")
-    map.dig("deploymentProfiles", "read") << "deletePackage"
+    map.dig("executionProfiles", "admin").delete("deletePackage")
+    map.dig("executionProfiles", "read") << "deletePackage"
     inventory
   end],
   ["default profile escalation", "default profile must be read", lambda do |map, _spec, inventory|
@@ -105,16 +105,16 @@ cases = [
     map.dig("policy", "adminScope").replace("session")
     inventory
   end],
-  ["automatic profile combination", "deployment profiles must not combine by default", lambda do |map, _spec, inventory|
-    map["policy"]["combineDeploymentProfilesByDefault"] = true
+  ["automatic profile combination", "execution profiles must not combine by default", lambda do |map, _spec, inventory|
+    map["policy"]["combineExecutionProfilesByDefault"] = true
     inventory
   end],
-  ["undeclared superadmin profile", "deployment profile keys changed", lambda do |map, _spec, inventory|
-    map["deploymentProfiles"]["superadmin"] = copy(map.dig("deploymentProfiles", "admin"))
+  ["undeclared superadmin profile", "execution profile keys changed", lambda do |map, _spec, inventory|
+    map["executionProfiles"]["superadmin"] = copy(map.dig("executionProfiles", "admin"))
     inventory
   end],
-  ["admin operation added to read", "deployment profiles overlap", lambda do |map, _spec, inventory|
-    map.dig("deploymentProfiles", "read") << "deletePackage"
+  ["admin operation added to read", "execution profiles overlap", lambda do |map, _spec, inventory|
+    map.dig("executionProfiles", "read") << "deletePackage"
     inventory
   end],
   ["conditional predicate reversal", "conditional protection predicates changed", lambda do |map, _spec, inventory|
@@ -157,8 +157,8 @@ cases = [
     map["policy"]["retainAdminForSession"] = true
     inventory
   end],
-  ["legacy top-level allowlist", "top-level API map keys changed", lambda do |map, _spec, inventory|
-    map["explicitAllowlist"] = copy(map["publicOperationManifest"])
+  ["unexpected transport configuration", "top-level API map keys changed", lambda do |map, _spec, inventory|
+    map["transportProfiles"] = copy(map["executionProfiles"])
     inventory
   end],
   ["map version drift", "API map version changed", lambda do |map, _spec, inventory|
@@ -195,6 +195,10 @@ cases = [
   end],
   ["source URL drift", "source URL changed", lambda do |map, _spec, inventory|
     map.dig("source", "url").replace("https://example.com/spec.yaml")
+    inventory
+  end],
+  ["public API server drift", "public API server changed", lambda do |_map, spec, inventory|
+    spec.fetch("servers").first["url"] = "https://example.com"
     inventory
   end]
 ]

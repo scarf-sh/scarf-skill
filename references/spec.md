@@ -2,15 +2,15 @@
 
 ## Goal
 
-Let a Scarf user analyze data and manage resources across the published API through a guarded MCP interface, without custom scripts or direct token handling.
+Let a Scarf user analyze data and manage resources across the published API through ordinary authenticated HTTPS, without requiring a separate Scarf-specific tool or server.
 
 ## Architecture
 
-- Use the Scarf MCP tool as the only transport.
-- Enforce a default-deny read allowlist in the MCP server and keep the separate admin allowlist disabled unless explicitly configured.
-- Use `references/api-map.json` as the reviewable public-operation manifest and deployment-profile source. The release checker independently binds every operation ID to its approved method and path; never deploy the full manifest as the default allowlist.
-- Treat `references/access-policy.md` as behavioral defense in depth, not authorization enforcement.
-- Prefer separate least-privileged read and admin credentials or tools when the deployment supports them.
+- Call `https://api.scarf.sh` directly with `SCARF_API_TOKEN` as a Bearer token using any available HTTPS client.
+- Do not require a plugin, proxy, companion server, or other Scarf-specific transport.
+- Use `references/api-map.json` as the reviewable public-operation manifest and execution-profile source. The release checker independently binds every operation ID to its approved method and path; never make the full manifest the default execution profile.
+- Treat `references/access-policy.md` as behavioral defense in depth, not authorization enforcement; the API token's server-side permissions are the hard boundary.
+- Prefer separate least-privileged read and admin credentials when the API and deployment support them.
 
 ## Coverage
 
@@ -43,10 +43,10 @@ Validate:
 - local skill structure and frontmatter;
 - JSON schema, unique operation ids and tuples, canonical operation ID/method/path bindings, request parameters and transitive request-body schemas for every operation, and exact OpenAPI coverage;
 - read/admin classification for every non-`GET` operation;
-- prompt behavior for safe reads, standard mutations, protected mutations, stale confirmation, partial failure, and blocked routes;
+- prompt behavior for safe reads, standard mutations, protected mutations, stale confirmation, partial failure, schema drift, and standalone API execution;
 - auth redaction, pagination, UTC defaults, `401`/`403`/`404`/`429`/`5xx`, and schema drift.
 
-Run `scripts/check_api_coverage.rb` and `scripts/test_api_coverage.rb` against the live spec before release. The executable mutation suite must reject synchronized route swaps, new referenced operations, policy escalation, classification drift, capability reassignment, malformed map shapes, undeclared deployment profiles, legacy allowlists, policy-relevant request-schema drift, and stale inventory counts.
+Run `scripts/check_api_coverage.rb` and `scripts/test_api_coverage.rb` against the live spec before release. The executable mutation suite must reject synchronized route swaps, new referenced operations, policy escalation, classification drift, capability reassignment, malformed map shapes, undeclared execution profiles, legacy transport configuration, policy-relevant request-schema drift, and stale inventory counts.
 
 ## Response contract
 

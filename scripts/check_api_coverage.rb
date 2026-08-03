@@ -9,10 +9,11 @@ ROOT = File.expand_path("..", __dir__)
 DEFAULT_MAP = File.join(ROOT, "references", "api-map.json")
 DEFAULT_SPEC = "https://api.scarf.sh/static/api-v2.yaml"
 DEFAULT_INVENTORY = File.join(ROOT, "references", "api-v2-endpoint-inventory.md")
+EXPECTED_API_SERVER = "https://api.scarf.sh"
 HTTP_METHODS = %w[get put post delete options head patch trace].freeze
-EXPECTED_TOP_LEVEL_KEYS = %w[capabilities deploymentProfiles policy publicOperationManifest source version].freeze
+EXPECTED_TOP_LEVEL_KEYS = %w[capabilities executionProfiles policy publicOperationManifest source version].freeze
 EXPECTED_SOURCE_KEYS = %w[asOf operationCount url].freeze
-EXPECTED_POLICY_KEYS = %w[adminRequiresExplicitEnablement adminScope combineDeploymentProfilesByDefault defaultProfile protectedConditions protectedMutations readLikePost standardMutations].freeze
+EXPECTED_POLICY_KEYS = %w[adminRequiresExplicitEnablement adminScope combineExecutionProfilesByDefault defaultProfile protectedConditions protectedMutations readLikePost standardMutations].freeze
 APPROVED_READ_LIKE_OPERATIONS = [
   ["search", "POST", "/v2/search"],
   ["chat_with_scarf_ai", "POST", "/v3/organizations/{owner}/ai/chat"]
@@ -186,8 +187,8 @@ end
 inventory_operation_ids = inventory_operations.map(&:first)
 inventory_total = inventory_text[/^Total operations: (\d+)$/, 1]&.to_i
 manifest_ids = map.fetch("publicOperationManifest")
-read_profile = map.dig("deploymentProfiles", "read")
-admin_profile = map.dig("deploymentProfiles", "admin")
+read_profile = map.dig("executionProfiles", "read")
+admin_profile = map.dig("executionProfiles", "admin")
 policy = map.fetch("policy")
 read_like_posts = policy.fetch("readLikePost")
 standard_mutations = policy.fetch("standardMutations")
@@ -211,8 +212,9 @@ errors << "top-level API map keys changed" unless map.keys.sort == EXPECTED_TOP_
 errors << "API map version changed" unless map["version"] == "v2-public-api"
 errors << "source keys changed" unless map.fetch("source").keys.sort == EXPECTED_SOURCE_KEYS.sort
 errors << "source URL changed" unless map.dig("source", "url") == DEFAULT_SPEC
+errors << "public API server changed" unless spec.fetch("servers", []).map { |server| server["url"] } == [EXPECTED_API_SERVER]
 errors << "policy keys changed" unless policy.keys.sort == EXPECTED_POLICY_KEYS.sort
-errors << "deployment profile keys changed" unless map.fetch("deploymentProfiles").keys.sort == %w[admin read]
+errors << "execution profile keys changed" unless map.fetch("executionProfiles").keys.sort == %w[admin read]
 errors << "source count is #{operation_ids.length}, map declares #{map.dig("source", "operationCount")}" unless operation_ids.length == map.dig("source", "operationCount")
 errors << "OpenAPI operation IDs have duplicates: #{duplicates(operation_ids).join(", ")}" unless duplicates(operation_ids).empty?
 errors << "manifest has duplicate operation IDs: #{duplicates(manifest_ids).join(", ")}" unless duplicates(manifest_ids).empty?
@@ -241,8 +243,8 @@ errors << "read profile has non-read operations: #{(read_profile - expected_read
 errors << "admin profile has duplicates: #{duplicates(admin_profile).join(", ")}" unless duplicates(admin_profile).empty?
 errors << "admin profile is missing: #{(expected_admin_profile - admin_profile).join(", ")}" unless (expected_admin_profile - admin_profile).empty?
 errors << "admin profile has non-admin operations: #{(admin_profile - expected_admin_profile).join(", ")}" unless (admin_profile - expected_admin_profile).empty?
-errors << "deployment profiles overlap: #{(read_profile & admin_profile).join(", ")}" unless (read_profile & admin_profile).empty?
-errors << "deployment profiles do not cover the manifest" unless (read_profile + admin_profile).sort == manifest_ids.sort
+errors << "execution profiles overlap: #{(read_profile & admin_profile).join(", ")}" unless (read_profile & admin_profile).empty?
+errors << "execution profiles do not cover the manifest" unless (read_profile + admin_profile).sort == manifest_ids.sort
 errors << "read-like operation IDs changed" unless read_like_posts.sort == APPROVED_READ_LIKE_IDS.sort
 errors << "read-like operations or routes changed" unless actual_read_like_operations.sort == APPROVED_READ_LIKE_OPERATIONS.sort
 errors << "standard mutation IDs changed" unless standard_mutations.sort == APPROVED_STANDARD_IDS.sort
@@ -256,7 +258,7 @@ errors << "conditional protection keys must also be standard mutations" unless (
 errors << "default profile must be read" unless policy["defaultProfile"] == "read"
 errors << "admin scope must be single-explicit-task" unless policy["adminScope"] == "single-explicit-task"
 errors << "admin profile must require explicit enablement" unless policy["adminRequiresExplicitEnablement"] == true
-errors << "deployment profiles must not combine by default" unless policy["combineDeploymentProfilesByDefault"] == false
+errors << "execution profiles must not combine by default" unless policy["combineExecutionProfilesByDefault"] == false
 errors << "write classifications have duplicates: #{duplicates(classified_writes).join(", ")}" unless duplicates(classified_writes).empty?
 errors << "non-GET operations are unclassified: #{(non_get_operations - classified_writes).join(", ")}" unless (non_get_operations - classified_writes).empty?
 errors << "write classifications include GET or unknown operations: #{(classified_writes - non_get_operations).join(", ")}" unless (classified_writes - non_get_operations).empty?

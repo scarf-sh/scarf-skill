@@ -1,6 +1,6 @@
 # Scarf API Access Policy
 
-Use this policy before every Scarf API call. The MCP server's route allowlist and the token's API permissions are the actual enforcement boundary.
+Use this policy before every Scarf API call. The token's API permissions are the actual enforcement boundary; the skill's execution profiles and instructions are behavioral safeguards.
 
 ## Profiles
 
@@ -59,9 +59,9 @@ After confirmation and immediately before the call, re-read the protected resour
 
 - Do not automatically retry a non-idempotent `POST` after a timeout or ambiguous failure. Read current state first.
 - Stop a sequence after a partial failure. Report succeeded and unexecuted operations separately.
-- Never fall back to raw HTTP, internal endpoints, or a broader credential when the MCP allowlist blocks a route.
+- Never fall back to undocumented or internal endpoints or a broader credential when a request is rejected. If the local map is stale, verify the operation against the published OpenAPI document before proceeding; treat an unclassified mutation as protected.
 - On `401`, request a valid token. On `403`, report insufficient permission. On `404`, distinguish missing from inaccessible when possible. Back off on `429` and transient `5xx` reads.
 
-## Deployment recommendation
+## Credential isolation
 
-Expose separate read and admin MCP allowlists or tools, deploy only the read profile by default, and keep admin routes disabled unless explicitly configured. Prefer separate least-privileged credentials. Never generate the default server allowlist from the full public-operation manifest. The skill-level profile prevents accidental use but cannot constrain a compromised or disobedient client by itself.
+Use the read execution profile by default and activate admin behavior only for the current explicit task. Prefer a read-only token for ordinary use and a separate least-privileged admin token for administrative tasks when the API and deployment support that separation. The skill works with a standard HTTPS client and does not require a separate Scarf-specific server. Its profile prevents accidental use but cannot constrain a compromised or disobedient client by itself.
