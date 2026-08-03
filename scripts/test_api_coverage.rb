@@ -15,6 +15,9 @@ README_PATH = File.join(ROOT, "README.md")
 CAPABILITY_SPEC_PATH = File.join(ROOT, "references", "spec.md")
 ACCESS_POLICY_PATH = File.join(ROOT, "references", "access-policy.md")
 SKILL_PATH = File.join(ROOT, "SKILL.md")
+FILTER_CATALOG_PATH = File.join(ROOT, "references", "filter-catalog.md")
+PROMPT_EXAMPLES_PATH = File.join(ROOT, "references", "prompt-examples.md")
+LAUNCH_CHECKLIST_PATH = File.join(ROOT, "references", "launch-checklist.md")
 SPEC_URL = "https://api.scarf.sh/static/api-v2.yaml"
 
 def copy(value)
@@ -40,7 +43,7 @@ def swap_inventory_rows(inventory, first_id, second_id)
   inventory.sub(first, "__SCARF_ROW_SWAP__\n").sub(second, first).sub("__SCARF_ROW_SWAP__\n", second)
 end
 
-def run_checker(map, spec, inventory, readme, capability_spec, access_policy, skill)
+def run_checker(map, spec, inventory, readme, capability_spec, access_policy, skill, filter_catalog, prompt_examples, launch_checklist)
   Dir.mktmpdir("scarf-coverage-test") do |directory|
     map_path = File.join(directory, "map.json")
     spec_path = File.join(directory, "spec.yaml")
@@ -49,6 +52,9 @@ def run_checker(map, spec, inventory, readme, capability_spec, access_policy, sk
     capability_spec_path = File.join(directory, "spec.md")
     access_policy_path = File.join(directory, "access-policy.md")
     skill_path = File.join(directory, "SKILL.md")
+    filter_catalog_path = File.join(directory, "filter-catalog.md")
+    prompt_examples_path = File.join(directory, "prompt-examples.md")
+    launch_checklist_path = File.join(directory, "launch-checklist.md")
     File.write(map_path, map.is_a?(String) ? map : JSON.pretty_generate(map))
     File.write(spec_path, spec.is_a?(String) ? spec : YAML.dump(spec))
     File.write(inventory_path, inventory)
@@ -56,6 +62,9 @@ def run_checker(map, spec, inventory, readme, capability_spec, access_policy, sk
     File.write(capability_spec_path, capability_spec)
     File.write(access_policy_path, access_policy)
     File.write(skill_path, skill)
+    File.write(filter_catalog_path, filter_catalog)
+    File.write(prompt_examples_path, prompt_examples)
+    File.write(launch_checklist_path, launch_checklist)
     stdout, stderr, status = Open3.capture3(
       RbConfig.ruby,
       CHECKER,
@@ -65,7 +74,10 @@ def run_checker(map, spec, inventory, readme, capability_spec, access_policy, sk
       readme_path,
       capability_spec_path,
       access_policy_path,
-      skill_path
+      skill_path,
+      filter_catalog_path,
+      prompt_examples_path,
+      launch_checklist_path
     )
     [stdout + stderr, status.success?]
   end
@@ -80,6 +92,9 @@ base_readme = File.read(README_PATH)
 base_capability_spec = File.read(CAPABILITY_SPEC_PATH)
 base_access_policy = File.read(ACCESS_POLICY_PATH)
 base_skill = File.read(SKILL_PATH)
+base_filter_catalog = File.read(FILTER_CATALOG_PATH)
+base_prompt_examples = File.read(PROMPT_EXAMPLES_PATH)
+base_launch_checklist = File.read(LAUNCH_CHECKLIST_PATH)
 baseline_output, baseline_success = run_checker(
   base_map_text,
   base_spec_text,
@@ -87,7 +102,10 @@ baseline_output, baseline_success = run_checker(
   base_readme,
   base_capability_spec,
   base_access_policy,
-  base_skill
+  base_skill,
+  base_filter_catalog,
+  base_prompt_examples,
+  base_launch_checklist
 )
 abort "baseline coverage check failed:\n#{baseline_output}" unless baseline_success
 
@@ -105,6 +123,10 @@ cases = [
   end],
   ["new HEAD operation", "source count is", lambda do |_map, spec, inventory|
     spec.dig("paths", "/v2/search")["head"] = { "operationId" => "searchHead" }
+    inventory
+  end],
+  ["case-variant HTTP method", "case-variant HTTP method fields are not allowed", lambda do |_map, spec, inventory|
+    spec.dig("paths", "/v2/search")["GET"] = { "operationId" => "shadowSearchGet" }
     inventory
   end],
   ["OpenAPI version drift", "OpenAPI version changed", lambda do |_map, spec, inventory|
@@ -315,7 +337,10 @@ cases.each do |label, expected, mutation|
   map = copy(base_map)
   spec = copy(base_spec)
   inventory = mutation.call(map, spec, base_inventory.dup)
-  output, success = run_checker(map, spec, inventory, base_readme, base_capability_spec, base_access_policy, base_skill)
+  output, success = run_checker(
+    map, spec, inventory, base_readme, base_capability_spec, base_access_policy, base_skill,
+    base_filter_catalog, base_prompt_examples, base_launch_checklist
+  )
   failures << "#{label}: expected #{expected.inspect}; success=#{success}\n#{output}" unless !success && output.include?(expected)
 end
 
@@ -370,7 +395,10 @@ raw_cases = [
 ]
 
 raw_cases.each do |label, expected, map, spec|
-  output, success = run_checker(map, spec, base_inventory, base_readme, base_capability_spec, base_access_policy, base_skill)
+  output, success = run_checker(
+    map, spec, base_inventory, base_readme, base_capability_spec, base_access_policy, base_skill,
+    base_filter_catalog, base_prompt_examples, base_launch_checklist
+  )
   failures << "#{label}: expected #{expected.inspect}; success=#{success}\n#{output}" unless !success && output.include?(expected)
 end
 
@@ -381,7 +409,10 @@ readme_output, readme_success = run_checker(
   base_readme.sub("as of 2026-08-02", "as of 2099-01-01"),
   base_capability_spec,
   base_access_policy,
-  base_skill
+  base_skill,
+  base_filter_catalog,
+  base_prompt_examples,
+  base_launch_checklist
 )
 unless !readme_success && readme_output.include?("README snapshot date does not match source")
   failures << "README snapshot drift: expected README snapshot mismatch; success=#{readme_success}\n#{readme_output}"
@@ -394,7 +425,10 @@ duplicate_readme_output, duplicate_readme_success = run_checker(
   "#{base_readme}\nThe current capability map covers all 83 operations in the published API as of 2099-01-01.\n",
   base_capability_spec,
   base_access_policy,
-  base_skill
+  base_skill,
+  base_filter_catalog,
+  base_prompt_examples,
+  base_launch_checklist
 )
 unless !duplicate_readme_success && duplicate_readme_output.include?("README must contain exactly one snapshot declaration")
   failures << "duplicate README snapshot: expected duplicate snapshot rejection; success=#{duplicate_readme_success}\n#{duplicate_readme_output}"
@@ -407,7 +441,10 @@ readme_count_output, readme_count_success = run_checker(
   base_readme.sub("covers all 83 operations", "covers all 82 operations"),
   base_capability_spec,
   base_access_policy,
-  base_skill
+  base_skill,
+  base_filter_catalog,
+  base_prompt_examples,
+  base_launch_checklist
 )
 unless !readme_count_success && readme_count_output.include?("README operation count does not match source")
   failures << "README operation count drift: expected count mismatch; success=#{readme_count_success}\n#{readme_count_output}"
@@ -417,56 +454,77 @@ document_cases = [
   [
     "capability spec source drift",
     "capability spec source URL does not match source",
-    base_capability_spec.sub("https://api.scarf.sh/static/api-v2.yaml", "https://example.com/spec.yaml"),
-    base_access_policy,
-    base_skill
+    { capability_spec: base_capability_spec.sub("https://api.scarf.sh/static/api-v2.yaml", "https://example.com/spec.yaml") }
   ],
   [
     "capability spec date drift",
     "capability spec snapshot date does not match source",
-    base_capability_spec.sub("2026-08-02 snapshot", "2099-01-01 snapshot"),
-    base_access_policy,
-    base_skill
+    { capability_spec: base_capability_spec.sub("2026-08-02 snapshot", "2099-01-01 snapshot") }
   ],
   [
     "capability spec count drift",
     "capability spec operation count does not match source",
-    base_capability_spec.sub("contains 83 operations", "contains 82 operations"),
-    base_access_policy,
-    base_skill
+    { capability_spec: base_capability_spec.sub("contains 83 operations", "contains 82 operations") }
   ],
   [
     "duplicate capability spec provenance",
     "capability spec must contain exactly one provenance declaration",
-    "#{base_capability_spec}\nCover all operations in the published OpenAPI document at `https://example.com/spec.yaml`, including its paths. The 2099-01-01 snapshot contains 82 operations.\n",
-    base_access_policy,
-    base_skill
+    { capability_spec: "#{base_capability_spec}\nCover all operations in the published OpenAPI document at `https://example.com/spec.yaml`, including its paths. The 2099-01-01 snapshot contains 82 operations.\n" }
   ],
   [
     "access policy classification drift",
     "access policy changed without review",
-    base_capability_spec,
-    base_access_policy.sub("Gateway and package config", "Gateway config"),
-    base_skill
+    { access_policy: base_access_policy.sub("Gateway and package config", "Gateway config") }
   ],
   [
     "skill protected-operation drift",
     "skill instructions changed without review",
-    base_capability_spec,
-    base_access_policy,
-    base_skill.sub("package, Scarf Gateway route/domain", "Scarf Gateway route/domain")
+    { skill: base_skill.sub("package, Scarf Gateway route/domain", "Scarf Gateway route/domain") }
+  ],
+  [
+    "capability spec instruction drift",
+    "capability spec changed without review",
+    { capability_spec: base_capability_spec.sub("Keep reads as the default profile", "Prefer reads by default") }
+  ],
+  [
+    "filter catalog drift",
+    "filter catalog changed without review",
+    { filter_catalog: base_filter_catalog.sub("Filter management remains", "Filter management stays") }
+  ],
+  [
+    "prompt acceptance drift",
+    "prompt examples changed without review",
+    { prompt_examples: base_prompt_examples.sub("### Stale confirmation", "### Old confirmation") }
+  ],
+  [
+    "launch checklist drift",
+    "launch checklist changed without review",
+    { launch_checklist: base_launch_checklist.sub("## Admin safety", "## Mutation safety") }
   ]
 ]
 
-document_cases.each do |label, expected, capability_spec, access_policy, skill|
+base_documents = {
+  capability_spec: base_capability_spec,
+  access_policy: base_access_policy,
+  skill: base_skill,
+  filter_catalog: base_filter_catalog,
+  prompt_examples: base_prompt_examples,
+  launch_checklist: base_launch_checklist
+}
+
+document_cases.each do |label, expected, overrides|
+  documents = base_documents.merge(overrides)
   output, success = run_checker(
     base_map_text,
     base_spec_text,
     base_inventory,
     base_readme,
-    capability_spec,
-    access_policy,
-    skill
+    documents[:capability_spec],
+    documents[:access_policy],
+    documents[:skill],
+    documents[:filter_catalog],
+    documents[:prompt_examples],
+    documents[:launch_checklist]
   )
   failures << "#{label}: expected #{expected.inspect}; success=#{success}\n#{output}" unless !success && output.include?(expected)
 end

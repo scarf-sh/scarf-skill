@@ -13,11 +13,18 @@ DEFAULT_README = File.join(ROOT, "README.md")
 DEFAULT_CAPABILITY_SPEC = File.join(ROOT, "references", "spec.md")
 DEFAULT_ACCESS_POLICY = File.join(ROOT, "references", "access-policy.md")
 DEFAULT_SKILL = File.join(ROOT, "SKILL.md")
+DEFAULT_FILTER_CATALOG = File.join(ROOT, "references", "filter-catalog.md")
+DEFAULT_PROMPT_EXAMPLES = File.join(ROOT, "references", "prompt-examples.md")
+DEFAULT_LAUNCH_CHECKLIST = File.join(ROOT, "references", "launch-checklist.md")
 EXPECTED_API_SERVER = "https://api.scarf.sh"
 EXPECTED_OPENAPI_VERSION = "3.0.3"
 EXPECTED_SOURCE_AS_OF = "2026-08-02"
 EXPECTED_ACCESS_POLICY_DIGEST = "3f986880b8ae3e890f677e219ec303d45ea8d4016f468bbf28143948915ca779"
 EXPECTED_SKILL_DIGEST = "d65e64b1b03db0d3abf3de32418bda84b466ef5a6717b12e6aa5d42c999e0069"
+EXPECTED_CAPABILITY_SPEC_DIGEST = "9ee6477dcf7ececdfe868d407c66354057a822173e5f1a0623b93caa6425df47"
+EXPECTED_FILTER_CATALOG_DIGEST = "9ff38fc1f8fadfa1f2db2e437990471c1d5de2f1a79f560bec4e1fcc4b8a4fcd"
+EXPECTED_PROMPT_EXAMPLES_DIGEST = "8e5a8f9ac36ec8a427bdedd443e04cb380e86eea9745e5006812e8c1aa56a945"
+EXPECTED_LAUNCH_CHECKLIST_DIGEST = "ecd953a94bb4e8bfc8fcebaa0571eeba07ac093437c1c424f96f2515d0918357"
 EXPECTED_AUTH_DESCRIPTION_DIGEST = "8e396c45ea1c55c7f3734d9dd4fc989f212122259625b1efe1767aff26b6022b"
 EXPECTED_SECURITY_SCHEMES = {
   "ApiToken" => {
@@ -82,6 +89,9 @@ readme_path = ARGV[3] || DEFAULT_README
 capability_spec_path = ARGV[4] || DEFAULT_CAPABILITY_SPEC
 access_policy_path = ARGV[5] || DEFAULT_ACCESS_POLICY
 skill_path = ARGV[6] || DEFAULT_SKILL
+filter_catalog_path = ARGV[7] || DEFAULT_FILTER_CATALOG
+prompt_examples_path = ARGV[8] || DEFAULT_PROMPT_EXAMPLES
+launch_checklist_path = ARGV[9] || DEFAULT_LAUNCH_CHECKLIST
 
 def read_source(source)
   return URI.open(source, &:read) if source.match?(%r{\Ahttps?://})
@@ -247,6 +257,7 @@ end
 
 operations = []
 request_schemas = []
+method_case_variants = []
 security_schemes = spec.dig("components", "securitySchemes") || {}
 unresolved_security_schemes = []
 path_server_overrides = []
@@ -256,6 +267,9 @@ operation_security_requirements = []
 normalize_security_requirements(spec["security"], security_schemes, EXPECTED_SECURITY_SCHEME_ALIASES, unresolved_security_schemes) if spec.key?("security")
 (spec["paths"] || {}).each do |path, path_item|
   path_item = resolve_path_item(spec, path_item)
+  path_item.each_key do |field|
+    method_case_variants << [path, field] if field.is_a?(String) && HTTP_METHODS.include?(field.downcase) && field != field.downcase
+  end
   path_server_overrides << path if path_item.key?("servers")
   if path_item.key?("security")
     path_security_metadata << path
@@ -283,6 +297,9 @@ readme_text = File.read(readme_path)
 capability_spec_text = File.read(capability_spec_path)
 access_policy_text = File.read(access_policy_path)
 skill_text = File.read(skill_path)
+filter_catalog_text = File.read(filter_catalog_path)
+prompt_examples_text = File.read(prompt_examples_path)
+launch_checklist_text = File.read(launch_checklist_path)
 inventory_source_urls = inventory_text.scan(/^Published spec: `([^`]+)`$/).flatten
 inventory_snapshot_dates = inventory_text.scan(/^- Snapshot checked on (\d{4}-\d{2}-\d{2})\.$/).flatten
 readme_snapshot_declarations = readme_text.scan(/^The current capability map covers all (\d+) operations .* as of (\d{4}-\d{2}-\d{2})\./)
@@ -353,8 +370,15 @@ errors << "README operation count does not match source" unless readme_operation
 errors << "capability spec source URL does not match source" unless capability_spec_url == map.dig("source", "url")
 errors << "capability spec snapshot date does not match source" unless capability_spec_date == map.dig("source", "asOf")
 errors << "capability spec operation count does not match source" unless capability_spec_count&.to_i == map.dig("source", "operationCount")
+unless method_case_variants.empty?
+  errors << "case-variant HTTP method fields are not allowed: #{method_case_variants.map { |path, field| "#{path} #{field}" }.join(", ")}"
+end
 errors << "access policy changed without review" unless Digest::SHA256.hexdigest(access_policy_text) == EXPECTED_ACCESS_POLICY_DIGEST
 errors << "skill instructions changed without review" unless Digest::SHA256.hexdigest(skill_text) == EXPECTED_SKILL_DIGEST
+errors << "capability spec changed without review" unless Digest::SHA256.hexdigest(capability_spec_text) == EXPECTED_CAPABILITY_SPEC_DIGEST
+errors << "filter catalog changed without review" unless Digest::SHA256.hexdigest(filter_catalog_text) == EXPECTED_FILTER_CATALOG_DIGEST
+errors << "prompt examples changed without review" unless Digest::SHA256.hexdigest(prompt_examples_text) == EXPECTED_PROMPT_EXAMPLES_DIGEST
+errors << "launch checklist changed without review" unless Digest::SHA256.hexdigest(launch_checklist_text) == EXPECTED_LAUNCH_CHECKLIST_DIGEST
 errors << "public API server changed" unless spec.fetch("servers", []).map { |server| server["url"] } == [EXPECTED_API_SERVER]
 errors << "path-level server overrides are not allowed: #{path_server_overrides.join(", ")}" unless path_server_overrides.empty?
 unless operation_server_overrides.empty?
