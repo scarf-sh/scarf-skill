@@ -10,6 +10,20 @@ DEFAULT_MAP = File.join(ROOT, "references", "api-map.json")
 DEFAULT_SPEC = "https://api.scarf.sh/static/api-v2.yaml"
 DEFAULT_INVENTORY = File.join(ROOT, "references", "api-v2-endpoint-inventory.md")
 EXPECTED_API_SERVER = "https://api.scarf.sh"
+EXPECTED_AUTH_DESCRIPTION_DIGEST = "8e396c45ea1c55c7f3734d9dd4fc989f212122259625b1efe1767aff26b6022b"
+EXPECTED_SECURITY_SCHEMES = {
+  "ApiToken" => {
+    "type" => "http",
+    "scheme" => "bearer",
+    "bearerFormat" => "JWT"
+  }
+}.freeze
+EXPECTED_OPERATION_SECURITY = [
+  ["export_entity_aggregations", "GET", "/v3/insights/{owner}/aggregations/export", [{ "ScarfBearer" => [] }]],
+  ["chat_with_scarf_ai", "POST", "/v3/organizations/{owner}/ai/chat", [{ "ScarfBearer" => [] }]],
+  ["create_positive_endpoint_feedback", "POST", "/v3/organizations/{owner}/endpoint-feedback/matches", [{ "ScarfBearer" => [] }]],
+  ["create_negative_endpoint_feedback", "POST", "/v3/organizations/{owner}/endpoint-feedback/unmatches", [{ "ScarfBearer" => [] }]]
+].freeze
 HTTP_METHODS = %w[get put post delete options head patch trace].freeze
 EXPECTED_TOP_LEVEL_KEYS = %w[capabilities executionProfiles policy publicOperationManifest source version].freeze
 EXPECTED_SOURCE_KEYS = %w[asOf operationCount url].freeze
@@ -152,13 +166,23 @@ spec = YAML.safe_load(read_source(spec_source), aliases: true)
 
 operations = []
 request_schemas = []
+path_server_overrides = []
+operation_server_overrides = []
+path_security_metadata = []
+operation_security_requirements = []
 (spec["paths"] || {}).each do |path, path_item|
   path_item = resolve_path_item(spec, path_item)
+  path_server_overrides << path if path_item.key?("servers")
+  path_security_metadata << path if path_item.key?("security")
   path_item.each do |method, operation|
     next unless HTTP_METHODS.include?(method)
 
     operations << [operation.fetch("operationId"), method.upcase, path]
     request_schemas << [operation.fetch("operationId"), method.upcase, path, *request_schema_signature(spec, path_item, operation)]
+    operation_server_overrides << [operation.fetch("operationId"), method.upcase, path] if operation.key?("servers")
+    if operation.key?("security")
+      operation_security_requirements << [operation.fetch("operationId"), method.upcase, path, canonicalize_schema(operation.fetch("security"))]
+    end
   end
 end
 
@@ -213,6 +237,19 @@ errors << "API map version changed" unless map["version"] == "v2-public-api"
 errors << "source keys changed" unless map.fetch("source").keys.sort == EXPECTED_SOURCE_KEYS.sort
 errors << "source URL changed" unless map.dig("source", "url") == DEFAULT_SPEC
 errors << "public API server changed" unless spec.fetch("servers", []).map { |server| server["url"] } == [EXPECTED_API_SERVER]
+errors << "path-level server overrides are not allowed: #{path_server_overrides.join(", ")}" unless path_server_overrides.empty?
+unless operation_server_overrides.empty?
+  errors << "operation-level server overrides are not allowed: #{operation_server_overrides.map { |entry| entry.join(" ") }.join(", ")}"
+end
+auth_description_digest = Digest::SHA256.hexdigest(spec.dig("info", "description").to_s)
+errors << "API authentication description changed" unless auth_description_digest == EXPECTED_AUTH_DESCRIPTION_DIGEST
+security_schemes = spec.dig("components", "securitySchemes")
+errors << "API security schemes changed" unless security_schemes == EXPECTED_SECURITY_SCHEMES
+errors << "global security requirements changed" if spec.key?("security")
+errors << "path-level security metadata is not allowed: #{path_security_metadata.join(", ")}" unless path_security_metadata.empty?
+unless operation_security_requirements.sort_by { |entry| entry.first(3) } == EXPECTED_OPERATION_SECURITY.sort_by { |entry| entry.first(3) }
+  errors << "operation security requirements changed"
+end
 errors << "policy keys changed" unless policy.keys.sort == EXPECTED_POLICY_KEYS.sort
 errors << "execution profile keys changed" unless map.fetch("executionProfiles").keys.sort == %w[admin read]
 errors << "source count is #{operation_ids.length}, map declares #{map.dig("source", "operationCount")}" unless operation_ids.length == map.dig("source", "operationCount")

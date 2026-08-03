@@ -6,6 +6,8 @@
 - [ ] `references/api-map.json` contains every published operation ID exactly once in the manifest and across the separate execution profiles; the release checker pins every ID/method/path tuple
 - [ ] every non-`GET` operation is read-like, standard, protected, or conditionally protected
 - [ ] no undocumented or internal endpoint is included
+- [ ] the canonical API server is `https://api.scarf.sh` and no path or operation overrides it
+- [ ] the documented Bearer scheme and global/path/operation security state are pinned
 - [ ] the default execution profile matches only `executionProfiles.read`
 - [ ] `executionProfiles.admin` activates only for the current explicit task and uses a separate least-privileged credential where possible
 - [ ] the full public-operation manifest is never used as the default execution profile

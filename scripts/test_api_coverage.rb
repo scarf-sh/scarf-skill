@@ -200,6 +200,35 @@ cases = [
   ["public API server drift", "public API server changed", lambda do |_map, spec, inventory|
     spec.fetch("servers").first["url"] = "https://example.com"
     inventory
+  end],
+  ["path-level server override", "path-level server overrides are not allowed", lambda do |_map, spec, inventory|
+    spec.dig("paths", "/v2/search")["servers"] = [{ "url" => "https://example.com" }]
+    inventory
+  end],
+  ["operation-level server override", "operation-level server overrides are not allowed", lambda do |_map, spec, inventory|
+    spec.dig("paths", "/v2/search", "post")["servers"] = [{ "url" => "https://example.com" }]
+    inventory
+  end],
+  ["authentication description drift", "API authentication description changed", lambda do |_map, spec, inventory|
+    spec.dig("info")["description"] = spec.dig("info", "description").sub("Bearer", "Basic")
+    inventory
+  end],
+  ["security scheme drift", "API security schemes changed", lambda do |_map, spec, inventory|
+    spec.dig("components", "securitySchemes", "ApiToken")["scheme"] = "basic"
+    inventory
+  end],
+  ["global security requirement drift", "global security requirements changed", lambda do |_map, spec, inventory|
+    spec["security"] = [{ "ApiToken" => [] }]
+    inventory
+  end],
+  ["operation security override", "operation security requirements changed", lambda do |_map, spec, inventory|
+    spec.dig("paths", "/v2/search", "post")["security"] = []
+    inventory
+  end],
+  ["referenced operation security drift", "operation security requirements changed", lambda do |_map, spec, inventory|
+    spec.dig("paths", "/v3/organizations/{owner}/ai/chat", "post", "security").first["OtherToken"] =
+      spec.dig("paths", "/v3/organizations/{owner}/ai/chat", "post", "security").first.delete("ScarfBearer")
+    inventory
   end]
 ]
 

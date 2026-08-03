@@ -42,6 +42,7 @@ Validate:
 
 - local skill structure and frontmatter;
 - JSON schema, unique operation ids and tuples, canonical operation ID/method/path bindings, request parameters and transitive request-body schemas for every operation, and exact OpenAPI coverage;
+- the canonical API server with no path- or operation-level overrides, plus the documented Bearer scheme and exact global/path/operation security state;
 - read/admin classification for every non-`GET` operation;
 - prompt behavior for safe reads, standard mutations, protected mutations, stale confirmation, partial failure, schema drift, and standalone API execution;
 - auth redaction, pagination, UTC defaults, `401`/`403`/`404`/`429`/`5xx`, and schema drift.
