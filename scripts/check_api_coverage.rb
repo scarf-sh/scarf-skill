@@ -18,11 +18,12 @@ EXPECTED_SECURITY_SCHEMES = {
     "bearerFormat" => "JWT"
   }
 }.freeze
+EXPECTED_SECURITY_SCHEME_ALIASES = { "ScarfBearer" => "ApiToken" }.freeze
 EXPECTED_OPERATION_SECURITY = [
-  ["export_entity_aggregations", "GET", "/v3/insights/{owner}/aggregations/export", [{ "ScarfBearer" => [] }]],
-  ["chat_with_scarf_ai", "POST", "/v3/organizations/{owner}/ai/chat", [{ "ScarfBearer" => [] }]],
-  ["create_positive_endpoint_feedback", "POST", "/v3/organizations/{owner}/endpoint-feedback/matches", [{ "ScarfBearer" => [] }]],
-  ["create_negative_endpoint_feedback", "POST", "/v3/organizations/{owner}/endpoint-feedback/unmatches", [{ "ScarfBearer" => [] }]]
+  ["export_entity_aggregations", "GET", "/v3/insights/{owner}/aggregations/export", [{ "ApiToken" => [] }]],
+  ["chat_with_scarf_ai", "POST", "/v3/organizations/{owner}/ai/chat", [{ "ApiToken" => [] }]],
+  ["create_positive_endpoint_feedback", "POST", "/v3/organizations/{owner}/endpoint-feedback/matches", [{ "ApiToken" => [] }]],
+  ["create_negative_endpoint_feedback", "POST", "/v3/organizations/{owner}/endpoint-feedback/unmatches", [{ "ApiToken" => [] }]]
 ].freeze
 HTTP_METHODS = %w[get put post delete options head patch trace].freeze
 EXPECTED_TOP_LEVEL_KEYS = %w[capabilities executionProfiles policy publicOperationManifest source version].freeze
@@ -97,6 +98,25 @@ def capability_digest(capabilities)
   Digest::SHA256.hexdigest(JSON.generate(normalized))
 end
 
+def normalize_security_requirements(requirements, declared_schemes, aliases, unresolved)
+  unless requirements.is_a?(Array) && requirements.all? { |requirement| requirement.is_a?(Hash) }
+    unresolved << "<malformed>"
+    return requirements
+  end
+
+  requirements.map do |requirement|
+    requirement.keys.sort.each_with_object({}) do |name, normalized|
+      resolved_name = declared_schemes.key?(name) ? name : aliases[name]
+      unless resolved_name && declared_schemes.key?(resolved_name)
+        unresolved << name.to_s
+        resolved_name = name
+      end
+      unresolved << "duplicate normalized requirement #{resolved_name}" if normalized.key?(resolved_name)
+      normalized[resolved_name] = canonicalize_schema(requirement.fetch(name))
+    end
+  end
+end
+
 def inventory_section_digest(sections)
   normalized = sections.sort_by { |section| section[:name] }.map do |section|
     [section[:name], section[:operations].sort]
@@ -166,14 +186,20 @@ spec = YAML.safe_load(read_source(spec_source), aliases: true)
 
 operations = []
 request_schemas = []
+security_schemes = spec.dig("components", "securitySchemes") || {}
+unresolved_security_schemes = []
 path_server_overrides = []
 operation_server_overrides = []
 path_security_metadata = []
 operation_security_requirements = []
+normalize_security_requirements(spec["security"], security_schemes, EXPECTED_SECURITY_SCHEME_ALIASES, unresolved_security_schemes) if spec.key?("security")
 (spec["paths"] || {}).each do |path, path_item|
   path_item = resolve_path_item(spec, path_item)
   path_server_overrides << path if path_item.key?("servers")
-  path_security_metadata << path if path_item.key?("security")
+  if path_item.key?("security")
+    path_security_metadata << path
+    normalize_security_requirements(path_item["security"], security_schemes, EXPECTED_SECURITY_SCHEME_ALIASES, unresolved_security_schemes)
+  end
   path_item.each do |method, operation|
     next unless HTTP_METHODS.include?(method)
 
@@ -181,7 +207,10 @@ operation_security_requirements = []
     request_schemas << [operation.fetch("operationId"), method.upcase, path, *request_schema_signature(spec, path_item, operation)]
     operation_server_overrides << [operation.fetch("operationId"), method.upcase, path] if operation.key?("servers")
     if operation.key?("security")
-      operation_security_requirements << [operation.fetch("operationId"), method.upcase, path, canonicalize_schema(operation.fetch("security"))]
+      normalized_security = normalize_security_requirements(
+        operation.fetch("security"), security_schemes, EXPECTED_SECURITY_SCHEME_ALIASES, unresolved_security_schemes
+      )
+      operation_security_requirements << [operation.fetch("operationId"), method.upcase, path, normalized_security]
     end
   end
 end
@@ -243,8 +272,10 @@ unless operation_server_overrides.empty?
 end
 auth_description_digest = Digest::SHA256.hexdigest(spec.dig("info", "description").to_s)
 errors << "API authentication description changed" unless auth_description_digest == EXPECTED_AUTH_DESCRIPTION_DIGEST
-security_schemes = spec.dig("components", "securitySchemes")
 errors << "API security schemes changed" unless security_schemes == EXPECTED_SECURITY_SCHEMES
+unless unresolved_security_schemes.empty?
+  errors << "undefined security schemes referenced: #{unresolved_security_schemes.uniq.sort.join(", ")}"
+end
 errors << "global security requirements changed" if spec.key?("security")
 errors << "path-level security metadata is not allowed: #{path_security_metadata.join(", ")}" unless path_security_metadata.empty?
 unless operation_security_requirements.sort_by { |entry| entry.first(3) } == EXPECTED_OPERATION_SECURITY.sort_by { |entry| entry.first(3) }

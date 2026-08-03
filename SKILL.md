@@ -27,6 +27,8 @@ Use Scarf's published API at `https://api.scarf.sh` over authenticated HTTPS. Do
 4. Use an HTTPS client that reads `SCARF_API_TOKEN` from the environment inside the process. Send `Authorization: Bearer ...` without printing the expanded header or token.
 5. Capture the HTTP status and response body, redact secrets, and apply the read or admin workflow below. Surface API errors faithfully instead of guessing a result.
 
+The published document currently labels four v3 operation security requirements `ScarfBearer` while declaring the Bearer scheme as `ApiToken`. Treat `ScarfBearer` only as an alias for the declared `ApiToken` scheme; it does not name a different credential or transport.
+
 ## Read profile
 
 - Permit public `GET` operations and the read-like `POST /v2/search` and `POST /v3/organizations/{owner}/ai/chat` operations without mutation confirmation.

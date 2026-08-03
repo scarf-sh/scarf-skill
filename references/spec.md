@@ -11,6 +11,7 @@ Let a Scarf user analyze data and manage resources across the published API thro
 - Use `references/api-map.json` as the reviewable public-operation manifest and execution-profile source. The release checker independently binds every operation ID to its approved method and path; never make the full manifest the default execution profile.
 - Treat `references/access-policy.md` as behavioral defense in depth, not authorization enforcement; the API token's server-side permissions are the hard boundary.
 - Prefer separate least-privileged read and admin credentials when the API and deployment support them.
+- Normalize the published v3 `ScarfBearer` security-requirement label to the declared `ApiToken` Bearer scheme. Reject every other undefined security-requirement name.
 
 ## Coverage
 

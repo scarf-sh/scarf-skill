@@ -225,9 +225,13 @@ cases = [
     spec.dig("paths", "/v2/search", "post")["security"] = []
     inventory
   end],
-  ["referenced operation security drift", "operation security requirements changed", lambda do |_map, spec, inventory|
+  ["undefined referenced operation security scheme", "undefined security schemes referenced: OtherToken", lambda do |_map, spec, inventory|
     spec.dig("paths", "/v3/organizations/{owner}/ai/chat", "post", "security").first["OtherToken"] =
       spec.dig("paths", "/v3/organizations/{owner}/ai/chat", "post", "security").first.delete("ScarfBearer")
+    inventory
+  end],
+  ["duplicate alias and declared security requirement", "duplicate normalized requirement ApiToken", lambda do |_map, spec, inventory|
+    spec.dig("paths", "/v3/organizations/{owner}/ai/chat", "post", "security").first["ApiToken"] = []
     inventory
   end]
 ]
