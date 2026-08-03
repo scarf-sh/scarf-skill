@@ -166,6 +166,9 @@ cases = [
   ["stale inventory total", "inventory declares 84, contains 83", lambda do |_map, _spec, inventory|
     inventory.sub("Total operations: 83", "Total operations: 84")
   end],
+  ["duplicate inventory total", "inventory must contain exactly one total operation count", lambda do |_map, _spec, inventory|
+    "#{inventory}\nTotal operations: 84\n"
+  end],
   ["offsetting inventory section drift", "inventory section Collections declares 6, contains 5", lambda do |_map, _spec, inventory|
     inventory.sub("## Collections (5)", "## Collections (6)").sub("## Company (5)", "## Company (4)")
   end],
@@ -366,4 +369,4 @@ unless !readme_count_success && readme_count_output.include?("README operation c
 end
 
 abort failures.join("\n\n") unless failures.empty?
-puts "API coverage mutation tests OK: baseline plus #{cases.length + raw_cases.length + 3} fail-closed scenarios"
+puts "API coverage mutation tests OK: baseline plus #{cases.length + raw_cases.length + 4} fail-closed scenarios"

@@ -295,7 +295,8 @@ inventory_operations = inventory_text.each_line.each_with_object([]) do |line, e
   end
 end
 inventory_operation_ids = inventory_operations.map(&:first)
-inventory_total = inventory_text[/^Total operations: (\d+)$/, 1]&.to_i
+inventory_total_declarations = inventory_text.scan(/^Total operations: (\d+)$/).flatten
+inventory_total = inventory_total_declarations.one? ? inventory_total_declarations.first.to_i : nil
 manifest_ids = map.fetch("publicOperationManifest")
 read_profile = map.dig("executionProfiles", "read")
 admin_profile = map.dig("executionProfiles", "admin")
@@ -357,6 +358,7 @@ unless request_schema_digest == EXPECTED_REQUEST_SCHEMA_DIGEST
 end
 errors << "manifest is missing: #{(operation_ids - manifest_ids).join(", ")}" unless (operation_ids - manifest_ids).empty?
 errors << "manifest has unknown operations: #{(manifest_ids - operation_ids).join(", ")}" unless (manifest_ids - operation_ids).empty?
+errors << "inventory must contain exactly one total operation count" unless inventory_total_declarations.length == 1
 errors << "inventory declares #{inventory_total.inspect}, contains #{inventory_operations.length}" unless inventory_total == inventory_operations.length
 errors << "inventory section names changed" unless inventory_sections.map { |section| section[:name] }.sort == EXPECTED_INVENTORY_SECTIONS.sort
 errors << "inventory section membership changed" unless inventory_section_digest(inventory_sections) == EXPECTED_INVENTORY_SECTION_DIGEST
