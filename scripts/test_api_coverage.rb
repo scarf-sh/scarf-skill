@@ -12,6 +12,9 @@ CHECKER = File.join(__dir__, "check_api_coverage.rb")
 MAP_PATH = File.join(ROOT, "references", "api-map.json")
 INVENTORY_PATH = File.join(ROOT, "references", "api-v2-endpoint-inventory.md")
 README_PATH = File.join(ROOT, "README.md")
+CAPABILITY_SPEC_PATH = File.join(ROOT, "references", "spec.md")
+ACCESS_POLICY_PATH = File.join(ROOT, "references", "access-policy.md")
+SKILL_PATH = File.join(ROOT, "SKILL.md")
 SPEC_URL = "https://api.scarf.sh/static/api-v2.yaml"
 
 def copy(value)
@@ -37,17 +40,33 @@ def swap_inventory_rows(inventory, first_id, second_id)
   inventory.sub(first, "__SCARF_ROW_SWAP__\n").sub(second, first).sub("__SCARF_ROW_SWAP__\n", second)
 end
 
-def run_checker(map, spec, inventory, readme)
+def run_checker(map, spec, inventory, readme, capability_spec, access_policy, skill)
   Dir.mktmpdir("scarf-coverage-test") do |directory|
     map_path = File.join(directory, "map.json")
     spec_path = File.join(directory, "spec.yaml")
     inventory_path = File.join(directory, "inventory.md")
     readme_path = File.join(directory, "README.md")
+    capability_spec_path = File.join(directory, "spec.md")
+    access_policy_path = File.join(directory, "access-policy.md")
+    skill_path = File.join(directory, "SKILL.md")
     File.write(map_path, map.is_a?(String) ? map : JSON.pretty_generate(map))
     File.write(spec_path, spec.is_a?(String) ? spec : YAML.dump(spec))
     File.write(inventory_path, inventory)
     File.write(readme_path, readme)
-    stdout, stderr, status = Open3.capture3(RbConfig.ruby, CHECKER, map_path, spec_path, inventory_path, readme_path)
+    File.write(capability_spec_path, capability_spec)
+    File.write(access_policy_path, access_policy)
+    File.write(skill_path, skill)
+    stdout, stderr, status = Open3.capture3(
+      RbConfig.ruby,
+      CHECKER,
+      map_path,
+      spec_path,
+      inventory_path,
+      readme_path,
+      capability_spec_path,
+      access_policy_path,
+      skill_path
+    )
     [stdout + stderr, status.success?]
   end
 end
@@ -58,7 +77,18 @@ base_map = JSON.parse(base_map_text)
 base_spec = YAML.safe_load(base_spec_text, aliases: true)
 base_inventory = File.read(INVENTORY_PATH)
 base_readme = File.read(README_PATH)
-baseline_output, baseline_success = run_checker(base_map_text, base_spec_text, base_inventory, base_readme)
+base_capability_spec = File.read(CAPABILITY_SPEC_PATH)
+base_access_policy = File.read(ACCESS_POLICY_PATH)
+base_skill = File.read(SKILL_PATH)
+baseline_output, baseline_success = run_checker(
+  base_map_text,
+  base_spec_text,
+  base_inventory,
+  base_readme,
+  base_capability_spec,
+  base_access_policy,
+  base_skill
+)
 abort "baseline coverage check failed:\n#{baseline_output}" unless baseline_success
 
 cases = [
@@ -285,7 +315,7 @@ cases.each do |label, expected, mutation|
   map = copy(base_map)
   spec = copy(base_spec)
   inventory = mutation.call(map, spec, base_inventory.dup)
-  output, success = run_checker(map, spec, inventory, base_readme)
+  output, success = run_checker(map, spec, inventory, base_readme, base_capability_spec, base_access_policy, base_skill)
   failures << "#{label}: expected #{expected.inspect}; success=#{success}\n#{output}" unless !success && output.include?(expected)
 end
 
@@ -340,7 +370,7 @@ raw_cases = [
 ]
 
 raw_cases.each do |label, expected, map, spec|
-  output, success = run_checker(map, spec, base_inventory, base_readme)
+  output, success = run_checker(map, spec, base_inventory, base_readme, base_capability_spec, base_access_policy, base_skill)
   failures << "#{label}: expected #{expected.inspect}; success=#{success}\n#{output}" unless !success && output.include?(expected)
 end
 
@@ -348,7 +378,10 @@ readme_output, readme_success = run_checker(
   base_map_text,
   base_spec_text,
   base_inventory,
-  base_readme.sub("as of 2026-08-02", "as of 2099-01-01")
+  base_readme.sub("as of 2026-08-02", "as of 2099-01-01"),
+  base_capability_spec,
+  base_access_policy,
+  base_skill
 )
 unless !readme_success && readme_output.include?("README snapshot date does not match source")
   failures << "README snapshot drift: expected README snapshot mismatch; success=#{readme_success}\n#{readme_output}"
@@ -358,7 +391,10 @@ duplicate_readme_output, duplicate_readme_success = run_checker(
   base_map_text,
   base_spec_text,
   base_inventory,
-  "#{base_readme}\nThe current capability map covers all 83 operations in the published API as of 2099-01-01.\n"
+  "#{base_readme}\nThe current capability map covers all 83 operations in the published API as of 2099-01-01.\n",
+  base_capability_spec,
+  base_access_policy,
+  base_skill
 )
 unless !duplicate_readme_success && duplicate_readme_output.include?("README must contain exactly one snapshot declaration")
   failures << "duplicate README snapshot: expected duplicate snapshot rejection; success=#{duplicate_readme_success}\n#{duplicate_readme_output}"
@@ -368,11 +404,72 @@ readme_count_output, readme_count_success = run_checker(
   base_map_text,
   base_spec_text,
   base_inventory,
-  base_readme.sub("covers all 83 operations", "covers all 82 operations")
+  base_readme.sub("covers all 83 operations", "covers all 82 operations"),
+  base_capability_spec,
+  base_access_policy,
+  base_skill
 )
 unless !readme_count_success && readme_count_output.include?("README operation count does not match source")
   failures << "README operation count drift: expected count mismatch; success=#{readme_count_success}\n#{readme_count_output}"
 end
 
+document_cases = [
+  [
+    "capability spec source drift",
+    "capability spec source URL does not match source",
+    base_capability_spec.sub("https://api.scarf.sh/static/api-v2.yaml", "https://example.com/spec.yaml"),
+    base_access_policy,
+    base_skill
+  ],
+  [
+    "capability spec date drift",
+    "capability spec snapshot date does not match source",
+    base_capability_spec.sub("2026-08-02 snapshot", "2099-01-01 snapshot"),
+    base_access_policy,
+    base_skill
+  ],
+  [
+    "capability spec count drift",
+    "capability spec operation count does not match source",
+    base_capability_spec.sub("contains 83 operations", "contains 82 operations"),
+    base_access_policy,
+    base_skill
+  ],
+  [
+    "duplicate capability spec provenance",
+    "capability spec must contain exactly one provenance declaration",
+    "#{base_capability_spec}\nCover all operations in the published OpenAPI document at `https://example.com/spec.yaml`, including its paths. The 2099-01-01 snapshot contains 82 operations.\n",
+    base_access_policy,
+    base_skill
+  ],
+  [
+    "access policy classification drift",
+    "access policy changed without review",
+    base_capability_spec,
+    base_access_policy.sub("Gateway and package config", "Gateway config"),
+    base_skill
+  ],
+  [
+    "skill protected-operation drift",
+    "skill instructions changed without review",
+    base_capability_spec,
+    base_access_policy,
+    base_skill.sub("package, Scarf Gateway route/domain", "Scarf Gateway route/domain")
+  ]
+]
+
+document_cases.each do |label, expected, capability_spec, access_policy, skill|
+  output, success = run_checker(
+    base_map_text,
+    base_spec_text,
+    base_inventory,
+    base_readme,
+    capability_spec,
+    access_policy,
+    skill
+  )
+  failures << "#{label}: expected #{expected.inspect}; success=#{success}\n#{output}" unless !success && output.include?(expected)
+end
+
 abort failures.join("\n\n") unless failures.empty?
-puts "API coverage mutation tests OK: baseline plus #{cases.length + raw_cases.length + 3} fail-closed scenarios"
+puts "API coverage mutation tests OK: baseline plus #{cases.length + raw_cases.length + document_cases.length + 3} fail-closed scenarios"

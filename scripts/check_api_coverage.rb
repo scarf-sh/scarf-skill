@@ -10,9 +10,14 @@ DEFAULT_MAP = File.join(ROOT, "references", "api-map.json")
 DEFAULT_SPEC = "https://api.scarf.sh/static/api-v2.yaml"
 DEFAULT_INVENTORY = File.join(ROOT, "references", "api-v2-endpoint-inventory.md")
 DEFAULT_README = File.join(ROOT, "README.md")
+DEFAULT_CAPABILITY_SPEC = File.join(ROOT, "references", "spec.md")
+DEFAULT_ACCESS_POLICY = File.join(ROOT, "references", "access-policy.md")
+DEFAULT_SKILL = File.join(ROOT, "SKILL.md")
 EXPECTED_API_SERVER = "https://api.scarf.sh"
 EXPECTED_OPENAPI_VERSION = "3.0.3"
 EXPECTED_SOURCE_AS_OF = "2026-08-02"
+EXPECTED_ACCESS_POLICY_DIGEST = "3f986880b8ae3e890f677e219ec303d45ea8d4016f468bbf28143948915ca779"
+EXPECTED_SKILL_DIGEST = "d65e64b1b03db0d3abf3de32418bda84b466ef5a6717b12e6aa5d42c999e0069"
 EXPECTED_AUTH_DESCRIPTION_DIGEST = "8e396c45ea1c55c7f3734d9dd4fc989f212122259625b1efe1767aff26b6022b"
 EXPECTED_SECURITY_SCHEMES = {
   "ApiToken" => {
@@ -74,6 +79,9 @@ map_path = ARGV[0] || DEFAULT_MAP
 spec_source = ARGV[1] || DEFAULT_SPEC
 inventory_path = ARGV[2] || DEFAULT_INVENTORY
 readme_path = ARGV[3] || DEFAULT_README
+capability_spec_path = ARGV[4] || DEFAULT_CAPABILITY_SPEC
+access_policy_path = ARGV[5] || DEFAULT_ACCESS_POLICY
+skill_path = ARGV[6] || DEFAULT_SKILL
 
 def read_source(source)
   return URI.open(source, &:read) if source.match?(%r{\Ahttps?://})
@@ -272,10 +280,18 @@ operation_ids = operations.map(&:first)
 operation_by_id = operations.each_with_object({}) { |operation, result| result[operation.first] = operation }
 inventory_text = File.read(inventory_path)
 readme_text = File.read(readme_path)
+capability_spec_text = File.read(capability_spec_path)
+access_policy_text = File.read(access_policy_path)
+skill_text = File.read(skill_path)
 inventory_source_urls = inventory_text.scan(/^Published spec: `([^`]+)`$/).flatten
 inventory_snapshot_dates = inventory_text.scan(/^- Snapshot checked on (\d{4}-\d{2}-\d{2})\.$/).flatten
 readme_snapshot_declarations = readme_text.scan(/^The current capability map covers all (\d+) operations .* as of (\d{4}-\d{2}-\d{2})\./)
 readme_operation_count, readme_snapshot_date = readme_snapshot_declarations.one? ? readme_snapshot_declarations.first : [nil, nil]
+capability_spec_declarations = capability_spec_text.scan(
+  /^Cover all operations in the published OpenAPI document at `([^`]+)`, .* The (\d{4}-\d{2}-\d{2}) snapshot contains (\d+) operations\.$/
+)
+capability_spec_url, capability_spec_date, capability_spec_count =
+  capability_spec_declarations.one? ? capability_spec_declarations.first : [nil, nil, nil]
 inventory_sections = []
 current_inventory_section = nil
 inventory_operations = inventory_text.each_line.each_with_object([]) do |line, entries|
@@ -329,10 +345,16 @@ errors << "source snapshot date changed" unless map.dig("source", "asOf") == EXP
 errors << "inventory must contain exactly one source URL" unless inventory_source_urls.length == 1
 errors << "inventory must contain exactly one snapshot date" unless inventory_snapshot_dates.length == 1
 errors << "README must contain exactly one snapshot declaration" unless readme_snapshot_declarations.length == 1
+errors << "capability spec must contain exactly one provenance declaration" unless capability_spec_declarations.length == 1
 errors << "inventory source URL does not match canonical source" unless inventory_source_urls == [DEFAULT_SPEC] && inventory_source_urls == [map.dig("source", "url")]
 errors << "inventory snapshot date does not match source" unless inventory_snapshot_dates == [map.dig("source", "asOf")]
 errors << "README snapshot date does not match source" unless readme_snapshot_date == map.dig("source", "asOf")
 errors << "README operation count does not match source" unless readme_operation_count&.to_i == map.dig("source", "operationCount")
+errors << "capability spec source URL does not match source" unless capability_spec_url == map.dig("source", "url")
+errors << "capability spec snapshot date does not match source" unless capability_spec_date == map.dig("source", "asOf")
+errors << "capability spec operation count does not match source" unless capability_spec_count&.to_i == map.dig("source", "operationCount")
+errors << "access policy changed without review" unless Digest::SHA256.hexdigest(access_policy_text) == EXPECTED_ACCESS_POLICY_DIGEST
+errors << "skill instructions changed without review" unless Digest::SHA256.hexdigest(skill_text) == EXPECTED_SKILL_DIGEST
 errors << "public API server changed" unless spec.fetch("servers", []).map { |server| server["url"] } == [EXPECTED_API_SERVER]
 errors << "path-level server overrides are not allowed: #{path_server_overrides.join(", ")}" unless path_server_overrides.empty?
 unless operation_server_overrides.empty?
