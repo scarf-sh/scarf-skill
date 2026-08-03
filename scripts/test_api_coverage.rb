@@ -235,6 +235,12 @@ cases = [
     map.dig("source", "url").replace("https://example.com/spec.yaml")
     inventory
   end],
+  ["inventory source URL drift", "inventory source URL does not match canonical source", lambda do |_map, _spec, inventory|
+    inventory.sub("Published spec: `https://api.scarf.sh/static/api-v2.yaml`", "Published spec: `https://example.com/spec.yaml`")
+  end],
+  ["duplicate inventory source URL", "inventory must contain exactly one source URL", lambda do |_map, _spec, inventory|
+    "#{inventory}\nPublished spec: `https://example.com/spec.yaml`\n"
+  end],
   ["public API server drift", "public API server changed", lambda do |_map, spec, inventory|
     spec.fetch("servers").first["url"] = "https://example.com"
     inventory

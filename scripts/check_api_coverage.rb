@@ -272,6 +272,7 @@ operation_ids = operations.map(&:first)
 operation_by_id = operations.each_with_object({}) { |operation, result| result[operation.first] = operation }
 inventory_text = File.read(inventory_path)
 readme_text = File.read(readme_path)
+inventory_source_urls = inventory_text.scan(/^Published spec: `([^`]+)`$/).flatten
 inventory_snapshot_dates = inventory_text.scan(/^- Snapshot checked on (\d{4}-\d{2}-\d{2})\.$/).flatten
 readme_snapshot_declarations = readme_text.scan(/^The current capability map covers all (\d+) operations .* as of (\d{4}-\d{2}-\d{2})\./)
 readme_operation_count, readme_snapshot_date = readme_snapshot_declarations.one? ? readme_snapshot_declarations.first : [nil, nil]
@@ -325,8 +326,10 @@ errors << "API map version changed" unless map["version"] == "v2-public-api"
 errors << "source keys changed" unless map.fetch("source").keys.sort == EXPECTED_SOURCE_KEYS.sort
 errors << "source URL changed" unless map.dig("source", "url") == DEFAULT_SPEC
 errors << "source snapshot date changed" unless map.dig("source", "asOf") == EXPECTED_SOURCE_AS_OF
+errors << "inventory must contain exactly one source URL" unless inventory_source_urls.length == 1
 errors << "inventory must contain exactly one snapshot date" unless inventory_snapshot_dates.length == 1
 errors << "README must contain exactly one snapshot declaration" unless readme_snapshot_declarations.length == 1
+errors << "inventory source URL does not match canonical source" unless inventory_source_urls == [DEFAULT_SPEC] && inventory_source_urls == [map.dig("source", "url")]
 errors << "inventory snapshot date does not match source" unless inventory_snapshot_dates == [map.dig("source", "asOf")]
 errors << "README snapshot date does not match source" unless readme_snapshot_date == map.dig("source", "asOf")
 errors << "README operation count does not match source" unless readme_operation_count&.to_i == map.dig("source", "operationCount")
