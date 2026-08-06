@@ -1,4 +1,4 @@
-# Insights Filters Catalog (v1)
+# Insights Filters Catalog
 
 Canonical source for endpoints: published public OpenAPI specs. Filter management remains on the public v2 API (`https://api.scarf.sh/static/api-v2.yaml`); aggregate analytics use v3 `GET /v3/insights/{owner}/aggregations/export` rather than legacy v2 aggregates.
 
@@ -22,7 +22,7 @@ Skill guidance:
 - Default new filters to `adhoc` scope.
 - Use `global` scope only when the user explicitly asks for it.
 - Before creating a `global` filter, ask for one confirmation because it affects org-wide analytics until removed.
-- User-defined variable writes are documented by the API, but remain out of v1 skill scope.
+- Persisted user-defined variables are a separate protected admin operation; do not combine them with a filter write.
 
 ## Payload shape
 
