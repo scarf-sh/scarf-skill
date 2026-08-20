@@ -36,8 +36,19 @@ The published document currently labels four v3 operation security requirements 
 - Prefer small, scoped calls. Apply a relevant `filter_id`.
 - Treat every list response as potentially truncated: the API defaults to 10 results and returns no pagination metadata. Pass an explicit `per_page` (normally 200), then increment `page` until a short page is returned. If pagination is incomplete, label the result partial.
 - Route aggregate analytics to `GET /v3/insights/{owner}/aggregations/export`, not the legacy v2 aggregate route.
+- Treat page/company questions such as “who viewed this page?” or “which companies visited this URL?” as aggregate analytics. Use the page/company recipe below; never fall back to Scarf AI chat, raw tracking-pixel exports, or the legacy v2 aggregate route. Call Scarf AI chat only when the user explicitly asks to query or converse with Scarf AI.
 - Route Dependency Radar to `GET /v2/organizations/{organization_name}/download-feed` with explicit `domain` and `date`; never substitute company events or company rollups.
 - If Dependency Radar is unavailable, identify it as open beta and suggest Scarf Slack or `help@scarf.sh`.
+
+### Page/company analytics recipe
+
+1. Resolve the exact owner and requested URL path. If no window was supplied, use the latest 30 UTC date buckets: `end_date` is tomorrow's UTC date (exclusive) and `start_date` is 30 days earlier.
+2. Call `scripts/aggregation_export.rb` with `rollup=daily` and the single two-dimensional `breakdown_set=by-company,by-referer`. Do not use `by-endpoint`: it returns endpoint identifiers, not URL paths.
+3. Parse each non-empty NDJSON line, parse each `referer` as a URI, and retain rows whose URI path exactly equals the requested path. Query strings and UTM parameters therefore remain included while prefix or substring paths do not match.
+4. Apply the cross-artifact rule before summarizing: rows that are identical in every field except `artifact` are one observation and count once; keep the lexicographically first artifact as deterministic evidence. Rows that differ in any analytics field remain artifact-scoped and must not be silently combined.
+5. Label `total` sums as aggregate events, never unique visitors or people. Classify firms or industries only after the matching Scarf rows are selected, and label that enrichment as externally sourced rather than Scarf visitation attribution.
+
+The helper requires an explicit rollup, supports one- or two-dimensional breakdown sets, reads `SCARF_API_TOKEN` only from its environment, and never prints request headers or the token.
 
 ## Admin profile
 

@@ -11,7 +11,7 @@ The skill separates work into two request-scoped profiles:
 
 The skill calls `https://api.scarf.sh` directly over authenticated HTTPS with a user-provided `SCARF_API_TOKEN`; it does not require a Scarf-specific tool or server. The read execution profile is the default, and admin behavior is activated only for the current explicit task. Guardrails include exact target resolution, pre-change reads, fresh confirmation for protected operations, serialized mutations, and post-change verification. A skill is not a security boundary, so use least-privileged and separate read/admin credentials where the API and deployment support them.
 
-The current capability map covers all 83 operations in the published v2/v3 OpenAPI document as of 2026-08-02. The release checker independently pins every operation ID to its approved HTTP method and path so policy assignments cannot silently move to another route.
+The current capability map covers all 84 operations in the published v2/v3 OpenAPI document as of 2026-08-20. The release checker independently pins every operation ID to its approved HTTP method and path so policy assignments cannot silently move to another route.
 
 ## Defaults
 
@@ -20,6 +20,7 @@ The current capability map covers all 83 operations in the published v2/v3 OpenA
 - Analytics timezone: UTC
 - Missing analytics window: `[now-30d, now)`
 - Aggregations: `GET /v3/insights/{owner}/aggregations/export`, never the legacy v2 aggregate route
+- Page/company analytics: `rollup=daily`, `breakdown_set=by-company,by-referer`, exact URI-path matching, and exact-row cross-artifact deduplication
 - List pagination: explicit `per_page` and `page` until a short page; the API defaults to 10 with no pagination metadata
 - Insights-filter scope: `adhoc` unless the user explicitly requests and confirms `global`
 - Dependency Radar: `GET /v2/organizations/{organization_name}/download-feed`
@@ -38,6 +39,7 @@ The current capability map covers all 83 operations in the published v2/v3 OpenA
 
 - `ruby scripts/check_skill_structure.rb`: validate the repository-required skill frontmatter.
 - `ruby scripts/test_skill_structure.rb`: reject duplicate or merged skill frontmatter metadata.
+- `ruby scripts/test_aggregation_export.rb`: validate aggregate query construction, NDJSON parsing, URI-path matching, rollup requirements, token safety, and cross-artifact behavior.
 - `ruby scripts/check_api_coverage.rb`: compare the live OpenAPI document, canonical manifest, inventory, profiles, policy, and capability groups.
 - `ruby scripts/test_api_coverage.rb`: run the live baseline plus executable fail-closed mutations for route, profile, policy, capability, reference, schema, inventory, and transport-contract drift.
 
