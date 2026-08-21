@@ -18,6 +18,7 @@ module ScarfAggregationExport
   ].freeze
   ARTIFACT_FIELD = "artifact"
   UNRESERVED_BYTE = /[A-Za-z0-9._~-]/.freeze
+  RAW_PATH_BYTE = /[A-Za-z0-9._~!$&'()*+,;=:@\/-]/.freeze
 
   class Error < StandardError; end
 
@@ -54,13 +55,17 @@ module ScarfAggregationExport
     raise Error, "dates must use YYYY-MM-DD: #{error.message}"
   end
 
-  def parse_ndjson(input)
+  def parse_ndjson(input, token: "")
     input.each_line.with_index(1).each_with_object([]) do |(line, number), rows|
       next if line.strip.empty?
 
-      rows << JSON.parse(line)
+      row = JSON.parse(line)
+      raise Error, "invalid NDJSON on line #{number}: expected an object" unless row.is_a?(Hash)
+
+      rows << row
     rescue JSON::ParserError => error
-      raise Error, "invalid NDJSON on line #{number}: #{error.message}"
+      detail = bounded_api_error(error.message, token: token)
+      raise Error, "invalid NDJSON on line #{number}: #{detail}"
     end
   end
 
@@ -73,6 +78,8 @@ module ScarfAggregationExport
       next false unless referer.is_a?(String)
 
       parsed_path = URI.parse(referer).path
+      next false if parsed_path.nil?
+
       canonical_path(parsed_path.empty? ? "/" : parsed_path) == requested_path
     rescue URI::InvalidURIError
       false
@@ -97,7 +104,8 @@ module ScarfAggregationExport
       end
 
       byte = bytes[index]
-      canonical << (byte < 0x80 ? byte.chr : format("%%%02X", byte))
+      raw_path_byte = byte < 0x80 && byte.chr.match?(RAW_PATH_BYTE)
+      canonical << (raw_path_byte ? byte.chr : format("%%%02X", byte))
       index += 1
     end
 
@@ -131,7 +139,7 @@ module ScarfAggregationExport
       raise Error, "Scarf API returned HTTP #{response.code}#{suffix}"
     end
 
-    parse_ndjson(response.body)
+    parse_ndjson(response.body, token: token)
   rescue Error
     raise
   rescue SocketError, SystemCallError, IOError, Timeout::Error, OpenSSL::SSL::SSLError, Net::ProtocolError

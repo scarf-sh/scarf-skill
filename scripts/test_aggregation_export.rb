@@ -62,6 +62,16 @@ class AggregationExportTest < Minitest::Test
     assert_equal 2, ScarfAggregationExport.exact_path_rows(rows, "/ai-leaderboard").length
   end
 
+  def test_rejects_non_object_ndjson_rows
+    ["null\n", "[]\n", "\"row\"\n"].each do |input|
+      error = assert_raises(ScarfAggregationExport::Error) do
+        ScarfAggregationExport.parse_ndjson(StringIO.new(input))
+      end
+
+      assert_includes error.message, "expected an object"
+    end
+  end
+
   def test_root_path_matches_referer_without_trailing_slash
     rows = [{ "referer" => "https://example.com", "total" => 1 }]
 
@@ -71,12 +81,23 @@ class AggregationExportTest < Minitest::Test
   def test_path_matching_normalizes_percent_encoding_without_decoding_separators
     cafe = { "referer" => "https://example.com/caf%C3%A9", "total" => 1 }
     tilde = { "referer" => "https://example.com/%7Euser", "total" => 1 }
+    spaced = { "referer" => "https://example.com/research%20reports", "total" => 1 }
     encoded_separator = { "referer" => "https://example.com/a%2fb", "total" => 1 }
 
     assert_equal [cafe], ScarfAggregationExport.exact_path_rows([cafe], "/café")
     assert_equal [tilde], ScarfAggregationExport.exact_path_rows([tilde], "/~user")
+    assert_equal [spaced], ScarfAggregationExport.exact_path_rows([spaced], "/research reports")
     assert_equal [encoded_separator], ScarfAggregationExport.exact_path_rows([encoded_separator], "/a%2Fb")
     assert_empty ScarfAggregationExport.exact_path_rows([encoded_separator], "/a/b")
+  end
+
+  def test_path_matching_skips_opaque_referers_without_a_path
+    rows = [
+      { "referer" => "mailto:user@example.com", "total" => 1 },
+      { "referer" => "https://example.com/pricing", "total" => 2 }
+    ]
+
+    assert_equal [rows.last], ScarfAggregationExport.exact_path_rows(rows, "/pricing")
   end
 
   def test_path_filtering_requires_referer_breakdown
@@ -195,6 +216,39 @@ class AggregationExportTest < Minitest::Test
 
     assert_equal "invalid [31m red next spoof", detail
     refute_match(/[\p{Cc}\p{Cf}]/, detail)
+  end
+
+  def test_malformed_ndjson_errors_are_bounded_sanitized_and_token_redacted
+    token = "secret-sentinel-token"
+    uri = ScarfAggregationExport.build_uri(
+      owner: "acme", rollup: "daily", breakdowns: ["by-referer"], now: FIXED_NOW
+    )
+    response = Struct.new(:body, :code) do
+      def is_a?(klass)
+        klass == Net::HTTPSuccess
+      end
+    end.new("{\"error\":\"#{token}\e[31m\"\n", "200")
+    client = Object.new
+    client.define_singleton_method(:request) { |_request| response }
+    transport = Object.new
+    transport.define_singleton_method(:start) do |_host, _port, use_ssl:, &block|
+      raise "TLS required" unless use_ssl
+      block.call(client)
+    end
+
+    previous_token = ENV["SCARF_API_TOKEN"]
+    ENV["SCARF_API_TOKEN"] = token
+    error = assert_raises(ScarfAggregationExport::Error) do
+      ScarfAggregationExport.fetch(uri, http: transport)
+    end
+
+    assert_includes error.message, "invalid NDJSON"
+    assert_includes error.message, "[REDACTED]"
+    refute_includes error.message, token
+    refute_match(/[\p{Cc}\p{Cf}]/, error.message)
+    assert_operator error.message.length, :<=, 550
+  ensure
+    ENV["SCARF_API_TOKEN"] = previous_token
   end
 
   def test_transport_failures_are_reported_as_sanitized_helper_errors
