@@ -215,8 +215,8 @@ cases = [
     map["publicOperationManifest"][0] = 123
     inventory
   end],
-  ["stale inventory total", "inventory declares 84, contains 83", lambda do |_map, _spec, inventory|
-    inventory.sub("Total operations: 83", "Total operations: 84")
+  ["stale inventory total", "inventory declares 85, contains 84", lambda do |_map, _spec, inventory|
+    inventory.sub("Total operations: 84", "Total operations: 85")
   end],
   ["duplicate inventory total", "inventory must contain exactly one total operation count", lambda do |_map, _spec, inventory|
     "#{inventory}\nTotal operations: 84\n"
@@ -257,7 +257,7 @@ cases = [
     inventory
   end],
   ["inventory snapshot drift", "inventory snapshot date does not match source", lambda do |_map, _spec, inventory|
-    inventory.sub("Snapshot checked on 2026-08-02", "Snapshot checked on 2099-01-01")
+    inventory.sub("Snapshot checked on 2026-08-20", "Snapshot checked on 2099-01-01")
   end],
   ["duplicate inventory snapshot", "inventory must contain exactly one snapshot date", lambda do |_map, _spec, inventory|
     "#{inventory}\n- Snapshot checked on 2099-01-01.\n"
@@ -409,7 +409,7 @@ readme_output, readme_success = run_checker(
   base_map_text,
   base_spec_text,
   base_inventory,
-  base_readme.sub("as of 2026-08-02", "as of 2099-01-01"),
+  base_readme.sub("as of 2026-08-20", "as of 2099-01-01"),
   base_capability_spec,
   base_access_policy,
   base_skill,
@@ -425,7 +425,7 @@ duplicate_readme_output, duplicate_readme_success = run_checker(
   base_map_text,
   base_spec_text,
   base_inventory,
-  "#{base_readme}\nThe current capability map covers all 83 operations in the published API as of 2099-01-01.\n",
+  "#{base_readme}\nThe current capability map covers all 84 operations in the published API as of 2099-01-01.\n",
   base_capability_spec,
   base_access_policy,
   base_skill,
@@ -441,7 +441,7 @@ readme_count_output, readme_count_success = run_checker(
   base_map_text,
   base_spec_text,
   base_inventory,
-  base_readme.sub("covers all 83 operations", "covers all 82 operations"),
+  base_readme.sub("covers all 84 operations", "covers all 83 operations"),
   base_capability_spec,
   base_access_policy,
   base_skill,
@@ -462,12 +462,12 @@ document_cases = [
   [
     "capability spec date drift",
     "capability spec snapshot date does not match source",
-    { capability_spec: base_capability_spec.sub("2026-08-02 snapshot", "2099-01-01 snapshot") }
+    { capability_spec: base_capability_spec.sub("2026-08-20 snapshot", "2099-01-01 snapshot") }
   ],
   [
     "capability spec count drift",
     "capability spec operation count does not match source",
-    { capability_spec: base_capability_spec.sub("contains 83 operations", "contains 82 operations") }
+    { capability_spec: base_capability_spec.sub("contains 84 operations", "contains 83 operations") }
   ],
   [
     "duplicate capability spec provenance",

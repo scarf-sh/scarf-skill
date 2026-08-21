@@ -2,8 +2,8 @@
   "version": "v2-public-api",
   "source": {
     "url": "https://api.scarf.sh/static/api-v2.yaml",
-    "asOf": "2026-08-02",
-    "operationCount": 83
+    "asOf": "2026-08-20",
+    "operationCount": 84
   },
   "policy": {
     "defaultProfile": "read",
@@ -160,7 +160,8 @@
     ],
     "discovery_and_ai": [
       "search",
-      "chat_with_scarf_ai"
+      "chat_with_scarf_ai",
+      "get_provider_adoption_leaderboard"
     ],
     "endpoint_feedback": [
       "create_positive_endpoint_feedback",
@@ -214,6 +215,7 @@
       "getEventImports",
       "getEventImport",
       "export_entity_aggregations",
+      "get_provider_adoption_leaderboard",
       "chat_with_scarf_ai"
     ],
     "admin": [
@@ -337,6 +339,7 @@
     "getEventImports",
     "getEventImport",
     "export_entity_aggregations",
+    "get_provider_adoption_leaderboard",
     "chat_with_scarf_ai",
     "create_positive_endpoint_feedback",
     "create_negative_endpoint_feedback"

@@ -198,6 +198,19 @@ Expected behavior:
 - Do not call the legacy `GET /v2/packages/{owner}/aggregates` endpoint.
 - Include the date window and dimensions or filters and name the v3 endpoint used.
 
+### Page/company aggregate analytics
+
+Prompt: “Which VC firms and PE funds have looked at our `/ai-leaderboard` page?”
+
+Expected behavior:
+
+- Resolve the exact owner and query `GET /v3/insights/{owner}/aggregations/export` directly.
+- With no supplied range, use the latest 30 UTC date buckets and pass `rollup=daily` plus `breakdown_set=by-company,by-referer` explicitly.
+- Do not call Scarf AI chat, raw tracking-pixel exports, the legacy v2 aggregate route, or `by-endpoint`.
+- Parse each referer as a URI and match the exact path `/ai-leaderboard`, including UTM/query variants but excluding prefix and substring paths.
+- Before totaling, collapse rows identical except for `artifact` to one observation; preserve non-identical rows as artifact-scoped evidence rather than silently merging them.
+- Label totals as aggregate events, not unique visitors. Select Scarf visitation rows before any outside VC/PE classification and label that classification as externally sourced.
+
 ### Pagination without metadata
 
 Prompt: “List every route configured on package `pkg_123`.”

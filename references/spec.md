@@ -15,7 +15,7 @@ Let a Scarf user analyze data and manage resources across the published API thro
 
 ## Coverage
 
-Cover all operations in the published OpenAPI document at `https://api.scarf.sh/static/api-v2.yaml`, including its v2 and v3 paths. The 2026-08-02 snapshot contains 83 operations.
+Cover all operations in the published OpenAPI document at `https://api.scarf.sh/static/api-v2.yaml`, including its v2 and v3 paths. The 2026-08-20 snapshot contains 84 operations.
 
 Capability families include analytics, packages, Scarf Gateway domains and routes, tracking pixels, collections, scheduled exports, filters and persisted variables, organizations and access control, external event imports, Dependency Radar, search, Scarf AI chat, and endpoint feedback.
 
