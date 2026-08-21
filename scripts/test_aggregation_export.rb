@@ -7,6 +7,10 @@ require_relative "aggregation_export"
 class AggregationExportTest < Minitest::Test
   FIXED_NOW = Time.utc(2026, 8, 20, 15, 30)
 
+  def test_aggregation_helper_is_executable
+    assert File.executable?(File.expand_path("aggregation_export.rb", __dir__))
+  end
+
   def test_page_recipe_builds_v3_query_with_utc_defaults
     uri = ScarfAggregationExport.build_uri(
       owner: "example owner",
@@ -64,6 +68,17 @@ class AggregationExportTest < Minitest::Test
     assert_equal rows, ScarfAggregationExport.exact_path_rows(rows, "/")
   end
 
+  def test_path_matching_normalizes_percent_encoding_without_decoding_separators
+    cafe = { "referer" => "https://example.com/caf%C3%A9", "total" => 1 }
+    tilde = { "referer" => "https://example.com/%7Euser", "total" => 1 }
+    encoded_separator = { "referer" => "https://example.com/a%2fb", "total" => 1 }
+
+    assert_equal [cafe], ScarfAggregationExport.exact_path_rows([cafe], "/café")
+    assert_equal [tilde], ScarfAggregationExport.exact_path_rows([tilde], "/~user")
+    assert_equal [encoded_separator], ScarfAggregationExport.exact_path_rows([encoded_separator], "/a%2Fb")
+    assert_empty ScarfAggregationExport.exact_path_rows([encoded_separator], "/a/b")
+  end
+
   def test_path_filtering_requires_referer_breakdown
     stdout = StringIO.new
     stderr = StringIO.new
@@ -76,6 +91,20 @@ class AggregationExportTest < Minitest::Test
     assert_equal 1, status
     assert_empty stdout.string
     assert_includes stderr.string, "path filtering requires a by-referer breakdown"
+  end
+
+  def test_rejects_unconsumed_positional_arguments
+    stdout = StringIO.new
+    stderr = StringIO.new
+
+    status = ScarfAggregationExport.run(
+      %w[--owner acme --path /pricing --rollup daily --breakdown by-referer by-company],
+      stdout: stdout, stderr: stderr, now: FIXED_NOW
+    )
+
+    assert_equal 1, status
+    assert_empty stdout.string
+    assert_includes stderr.string, "unexpected positional arguments"
   end
 
   def test_cross_artifact_rule_collapses_only_exact_analytics_rows
@@ -157,6 +186,15 @@ class AggregationExportTest < Minitest::Test
     assert_operator error.message.length, :<=, 550
   ensure
     ENV["SCARF_API_TOKEN"] = previous_token
+  end
+
+  def test_api_error_details_strip_terminal_control_characters
+    detail = ScarfAggregationExport.bounded_api_error(
+      "invalid\e[31m red\a\nnext\u202Espoof", token: ""
+    )
+
+    assert_equal "invalid [31m red next spoof", detail
+    refute_match(/[\p{Cc}\p{Cf}]/, detail)
   end
 
   def test_transport_failures_are_reported_as_sanitized_helper_errors

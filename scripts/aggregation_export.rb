@@ -17,6 +17,7 @@ module ScarfAggregationExport
     by-origin by-file-extension by-educational-organization by-govermental-organization
   ].freeze
   ARTIFACT_FIELD = "artifact"
+  UNRESERVED_BYTE = /[A-Za-z0-9._~-]/.freeze
 
   class Error < StandardError; end
 
@@ -66,15 +67,41 @@ module ScarfAggregationExport
   def exact_path_rows(rows, requested_path)
     raise Error, "requested path must start with /" unless requested_path.start_with?("/")
 
+    requested_path = canonical_path(requested_path)
     rows.select do |row|
       referer = row["referer"]
       next false unless referer.is_a?(String)
 
       parsed_path = URI.parse(referer).path
-      (parsed_path.empty? ? "/" : parsed_path) == requested_path
+      canonical_path(parsed_path.empty? ? "/" : parsed_path) == requested_path
     rescue URI::InvalidURIError
       false
     end
+  end
+
+  def canonical_path(path)
+    bytes = path.to_s.encode("UTF-8", invalid: :replace, undef: :replace, replace: "�").bytes
+    canonical = +""
+    index = 0
+
+    while index < bytes.length
+      if bytes[index] == 0x25 && index + 2 < bytes.length
+        escape = bytes.slice(index + 1, 2).pack("C*")
+        if escape.match?(/\A[0-9A-Fa-f]{2}\z/)
+          decoded = escape.to_i(16)
+          unreserved = decoded < 0x80 && decoded.chr.match?(UNRESERVED_BYTE)
+          canonical << (unreserved ? decoded.chr : format("%%%02X", decoded))
+          index += 3
+          next
+        end
+      end
+
+      byte = bytes[index]
+      canonical << (byte < 0x80 ? byte.chr : format("%%%02X", byte))
+      index += 1
+    end
+
+    canonical
   end
 
   def deduplicate_cross_artifact(rows)
@@ -86,6 +113,7 @@ module ScarfAggregationExport
   def bounded_api_error(body, token:, limit: 500)
     message = body.to_s.encode("UTF-8", invalid: :replace, undef: :replace, replace: "�")
     message = message.gsub(token, "[REDACTED]") unless token.empty?
+    message = message.gsub(/[\p{Cc}\p{Cf}]/, " ")
     message = message.gsub(/\s+/, " ").strip
     message.length > limit ? "#{message[0, limit]}…" : message
   end
@@ -122,6 +150,7 @@ module ScarfAggregationExport
       flags.on("--breakdown DIM") { |value| options[:breakdowns] << value }
     end
     parser.parse!(argv)
+    raise Error, "unexpected positional arguments" unless argv.empty?
     raise Error, "path is required" if options[:path].to_s.empty?
     raise Error, "path filtering requires a by-referer breakdown" unless options[:breakdowns].include?("by-referer")
 
