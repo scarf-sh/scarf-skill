@@ -3,7 +3,9 @@
 require "date"
 require "json"
 require "net/http"
+require "openssl"
 require "optparse"
+require "timeout"
 require "uri"
 
 module ScarfAggregationExport
@@ -68,7 +70,8 @@ module ScarfAggregationExport
       referer = row["referer"]
       next false unless referer.is_a?(String)
 
-      URI.parse(referer).path == requested_path
+      parsed_path = URI.parse(referer).path
+      (parsed_path.empty? ? "/" : parsed_path) == requested_path
     rescue URI::InvalidURIError
       false
     end
@@ -80,6 +83,13 @@ module ScarfAggregationExport
     end
   end
 
+  def bounded_api_error(body, token:, limit: 500)
+    message = body.to_s.encode("UTF-8", invalid: :replace, undef: :replace, replace: "�")
+    message = message.gsub(token, "[REDACTED]") unless token.empty?
+    message = message.gsub(/\s+/, " ").strip
+    message.length > limit ? "#{message[0, limit]}…" : message
+  end
+
   def fetch(uri, http: Net::HTTP)
     token = ENV["SCARF_API_TOKEN"]
     raise Error, "SCARF_API_TOKEN is not configured" if token.to_s.empty?
@@ -87,9 +97,17 @@ module ScarfAggregationExport
     request = Net::HTTP::Get.new(uri)
     request["Authorization"] = "Bearer #{token}"
     response = http.start(uri.hostname, uri.port, use_ssl: true) { |client| client.request(request) }
-    raise Error, "Scarf API returned HTTP #{response.code}" unless response.is_a?(Net::HTTPSuccess)
+    unless response.is_a?(Net::HTTPSuccess)
+      detail = bounded_api_error(response.body, token: token)
+      suffix = detail.empty? ? "" : ": #{detail}"
+      raise Error, "Scarf API returned HTTP #{response.code}#{suffix}"
+    end
 
     parse_ndjson(response.body)
+  rescue Error
+    raise
+  rescue SocketError, SystemCallError, IOError, Timeout::Error, OpenSSL::SSL::SSLError, Net::ProtocolError
+    raise Error, "Scarf API request failed"
   end
 
   def run(argv, stdout: $stdout, stderr: $stderr, now: Time.now.utc)
@@ -105,6 +123,7 @@ module ScarfAggregationExport
     end
     parser.parse!(argv)
     raise Error, "path is required" if options[:path].to_s.empty?
+    raise Error, "path filtering requires a by-referer breakdown" unless options[:breakdowns].include?("by-referer")
 
     uri = build_uri(
       owner: options[:owner], rollup: options[:rollup], breakdowns: options[:breakdowns],

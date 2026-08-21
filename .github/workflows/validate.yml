@@ -38,6 +38,7 @@ jobs:
           done
           ruby scripts/check_skill_structure.rb
           ruby scripts/test_skill_structure.rb
+          ruby scripts/test_aggregation_export.rb
           jq empty references/api-map.json
 
       - name: Check API coverage

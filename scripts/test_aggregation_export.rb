@@ -58,6 +58,26 @@ class AggregationExportTest < Minitest::Test
     assert_equal 2, ScarfAggregationExport.exact_path_rows(rows, "/ai-leaderboard").length
   end
 
+  def test_root_path_matches_referer_without_trailing_slash
+    rows = [{ "referer" => "https://example.com", "total" => 1 }]
+
+    assert_equal rows, ScarfAggregationExport.exact_path_rows(rows, "/")
+  end
+
+  def test_path_filtering_requires_referer_breakdown
+    stdout = StringIO.new
+    stderr = StringIO.new
+
+    status = ScarfAggregationExport.run(
+      %w[--owner acme --path /pricing --rollup daily --breakdown by-company],
+      stdout: stdout, stderr: stderr, now: FIXED_NOW
+    )
+
+    assert_equal 1, status
+    assert_empty stdout.string
+    assert_includes stderr.string, "path filtering requires a by-referer breakdown"
+  end
+
   def test_cross_artifact_rule_collapses_only_exact_analytics_rows
     base = {
       "date" => "2026-08-20", "rollup" => "daily",
@@ -103,6 +123,59 @@ class AggregationExportTest < Minitest::Test
     refute_includes uri.to_s, token
     refute_includes stdout, token
     refute_includes stderr, token
+  ensure
+    ENV["SCARF_API_TOKEN"] = previous_token
+  end
+
+  def test_api_error_details_are_bounded_and_token_is_redacted
+    token = "secret-sentinel-token"
+    uri = ScarfAggregationExport.build_uri(
+      owner: "acme", rollup: "daily", breakdowns: ["by-referer"], now: FIXED_NOW
+    )
+    response = Struct.new(:body, :code) do
+      def is_a?(_klass)
+        false
+      end
+    end.new("invalid date for #{token} #{"x" * 600}", "400")
+    client = Object.new
+    client.define_singleton_method(:request) { |_request| response }
+    transport = Object.new
+    transport.define_singleton_method(:start) do |_host, _port, use_ssl:, &block|
+      raise "TLS required" unless use_ssl
+      block.call(client)
+    end
+
+    previous_token = ENV["SCARF_API_TOKEN"]
+    ENV["SCARF_API_TOKEN"] = token
+    error = assert_raises(ScarfAggregationExport::Error) do
+      ScarfAggregationExport.fetch(uri, http: transport)
+    end
+
+    assert_includes error.message, "invalid date"
+    assert_includes error.message, "[REDACTED]"
+    refute_includes error.message, token
+    assert_operator error.message.length, :<=, 550
+  ensure
+    ENV["SCARF_API_TOKEN"] = previous_token
+  end
+
+  def test_transport_failures_are_reported_as_sanitized_helper_errors
+    uri = ScarfAggregationExport.build_uri(
+      owner: "acme", rollup: "daily", breakdowns: ["by-referer"], now: FIXED_NOW
+    )
+    transport = Object.new
+    transport.define_singleton_method(:start) do |_host, _port, use_ssl:|
+      raise "TLS required" unless use_ssl
+      raise SocketError, "host lookup included implementation details"
+    end
+
+    previous_token = ENV["SCARF_API_TOKEN"]
+    ENV["SCARF_API_TOKEN"] = "secret-sentinel-token"
+    error = assert_raises(ScarfAggregationExport::Error) do
+      ScarfAggregationExport.fetch(uri, http: transport)
+    end
+
+    assert_equal "Scarf API request failed", error.message
   ensure
     ENV["SCARF_API_TOKEN"] = previous_token
   end
