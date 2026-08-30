@@ -34,6 +34,7 @@ Treat every other mutation as **protected**. Show the exact target, material dif
 | Gateway and package config | `createPackage`, `updatePackage`, package domain/route writes | Broken download traffic or incorrect routing |
 | Tracking | Tracking-pixel and tracking-pixel-domain writes | Telemetry loss or misattribution |
 | Access control | Member, invite, role, and package-permission writes | Privilege change or loss of access |
+| Contact submission | `request_provider_adoption_access` | Stores contact details and sends email; confirm recipient and explicit consent |
 | Organization | `updateOrganization` | Organization-wide effect |
 | Data delivery | `scheduleExport`, `deleteScheduledExport` | Recurring delivery or data exposure |
 | Analytics state | Global filter writes; `setUserDefinedVariables` | Organization-wide analytics changes |

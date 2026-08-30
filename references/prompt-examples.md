@@ -208,8 +208,46 @@ Expected behavior:
 - With no supplied range, use the latest 30 UTC date buckets and pass `rollup=daily` plus `breakdown_set=by-company,by-referer` explicitly.
 - Do not call Scarf AI chat, raw tracking-pixel exports, the legacy v2 aggregate route, or `by-endpoint`.
 - Parse each referer as a URI and match the exact path `/ai-leaderboard`, including UTM/query variants but excluding prefix and substring paths.
-- Before totaling, collapse rows identical except for `artifact` to one observation; preserve non-identical rows as artifact-scoped evidence rather than silently merging them.
+- Request `group_by_artifact=false` and preserve every returned row. Equal values from different artifacts do not prove duplicate observations. Never sum unique counts across referrers, dates, or artifact types.
 - Label totals as aggregate events, not unique visitors. Select Scarf visitation rows before any outside VC/PE classification and label that classification as externally sourced.
+
+### Whole-window package visitors
+
+Prompt: “How many unique sources downloaded our packages during August?”
+
+Expected behavior:
+
+- Resolve the year and owner; use August 1 inclusive through September 1 exclusive.
+- Use `package_id=all`, `rollup=total`, `breakdown=by-total`, `group_by_artifact=false`, and `format=json`.
+- Read `unique_origins` from the one package row; label it approximate unique sources, not people. Do not sum daily distincts or include pixel views.
+
+### Combined package/pixel timeline
+
+Prompt: “Show downloads and page views together by week, with unique sources.”
+
+Expected behavior:
+
+- Use explicit artifact scope, `rollup=weekly`, and `breakdown=by-total`, with `group_by_artifact=false`.
+- Report the package and pixel weekly rows separately. No published parameter combines artifact types, so state that limitation rather than merging the series.
+- Never add the two unique-source counts together, and never sum weekly distincts across the window; distinct counts are not additive.
+
+### Company segments
+
+Prompt: “How many companies are in each funnel stage for this filter?”
+
+Expected behavior:
+
+- Use `by-company-funnel-stage` alone, `rollup=total`, and `format=json`; pass the reference through `filter`.
+- Parse the JSON data envelope and use `company_count`. Do not combine segment dimensions, request a daily segment rollup, or label company counts as visits.
+
+### Page stored in a variable
+
+Prompt: “Who visited the docs page tracked by our `$page` mapping?”
+
+Expected behavior:
+
+- Read the configured variables and resolve the page field; use `request_variable` filtering and `by-variable` when appropriate.
+- Do not assume `by-referer` applies the `$page` mapping or declare zero visits from an empty raw-referrer result.
 
 ### Pagination without metadata
 

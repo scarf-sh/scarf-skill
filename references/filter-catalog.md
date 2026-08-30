@@ -182,4 +182,7 @@ Apply flow:
 
 1. `POST /v2/insights/{owner}/filters?scope=adhoc`
 2. Read returned `id`
-3. Call analytics endpoint with `?filter_id=<id>`
+3. Call the analytics endpoint with the filter parameter that operation
+   declares: v2 analytics routes take `?filter_id=<id>`, while v3
+   `export_entity_aggregations` takes `?filter=<ref>` and accepts either a v3
+   slug or a v2 hashid. Do not assume `filter_id` applies everywhere.

@@ -84,7 +84,8 @@ def run_checker(map, spec, inventory, readme, capability_spec, access_policy, sk
 end
 
 base_map_text = File.read(MAP_PATH)
-base_spec_text = URI.open(SPEC_URL, &:read)
+spec_source = ARGV[0] || SPEC_URL
+base_spec_text = spec_source.match?(%r{\Ahttps?://}) ? URI.open(spec_source, &:read) : File.read(spec_source)
 base_map = JSON.parse(base_map_text)
 base_spec = YAML.safe_load(base_spec_text, aliases: true)
 base_inventory = File.read(INVENTORY_PATH)
@@ -215,11 +216,11 @@ cases = [
     map["publicOperationManifest"][0] = 123
     inventory
   end],
-  ["stale inventory total", "inventory declares 85, contains 84", lambda do |_map, _spec, inventory|
-    inventory.sub("Total operations: 84", "Total operations: 85")
+  ["stale inventory total", "inventory declares 86, contains 85", lambda do |_map, _spec, inventory|
+    inventory.sub("Total operations: 85", "Total operations: 86")
   end],
   ["duplicate inventory total", "inventory must contain exactly one total operation count", lambda do |_map, _spec, inventory|
-    "#{inventory}\nTotal operations: 84\n"
+    "#{inventory}\nTotal operations: 85\n"
   end],
   ["offsetting inventory section drift", "inventory section Collections declares 6, contains 5", lambda do |_map, _spec, inventory|
     inventory.sub("## Collections (5)", "## Collections (6)").sub("## Company (5)", "## Company (4)")
@@ -257,7 +258,7 @@ cases = [
     inventory
   end],
   ["inventory snapshot drift", "inventory snapshot date does not match source", lambda do |_map, _spec, inventory|
-    inventory.sub("Snapshot checked on 2026-08-20", "Snapshot checked on 2099-01-01")
+    inventory.sub("Snapshot checked on 2026-08-30", "Snapshot checked on 2099-01-01")
   end],
   ["duplicate inventory snapshot", "inventory must contain exactly one snapshot date", lambda do |_map, _spec, inventory|
     "#{inventory}\n- Snapshot checked on 2099-01-01.\n"
@@ -284,6 +285,25 @@ cases = [
   end],
   ["annotation-named request property drift", "request schemas changed", lambda do |_map, spec, inventory|
     spec.dig("components", "schemas", "UpdateOrganization", "properties", "description")["maxLength"] = 1
+    inventory
+  end],
+  ["aggregation selector drift", "request schemas changed", lambda do |_map, spec, inventory|
+    spec.dig("paths", "/v3/insights/{owner}/aggregations/export", "get", "parameters").find { |parameter| parameter["name"] == "package_id" }["name"] = "packages"
+    inventory
+  end],
+  ["aggregation grouping default drift", "request schemas changed", lambda do |_map, spec, inventory|
+    spec.dig("paths", "/v3/insights/{owner}/aggregations/export", "get", "parameters").find { |parameter| parameter["name"] == "group_by_artifact" }.fetch("schema")["default"] = false
+    inventory
+  end],
+  ["aggregation JSON format drift", "request schemas changed", lambda do |_map, spec, inventory|
+    spec.dig("paths", "/v3/insights/{owner}/aggregations/export", "get", "parameters").find { |parameter| parameter["name"] == "format" }.fetch("schema")["enum"].delete("json")
+    inventory
+  end],
+  ["contact submission made read-like", "read-like operations or routes changed", lambda do |map, _spec, inventory|
+    map["policy"]["readLikePost"] << "request_provider_adoption_access"
+    map["policy"]["protectedMutations"].delete("request_provider_adoption_access")
+    map["executionProfiles"]["admin"].delete("request_provider_adoption_access")
+    map["executionProfiles"]["read"] << "request_provider_adoption_access"
     inventory
   end],
   ["source URL drift", "source URL changed", lambda do |map, _spec, inventory|
@@ -409,7 +429,7 @@ readme_output, readme_success = run_checker(
   base_map_text,
   base_spec_text,
   base_inventory,
-  base_readme.sub("as of 2026-08-20", "as of 2099-01-01"),
+  base_readme.sub("as of 2026-08-30", "as of 2099-01-01"),
   base_capability_spec,
   base_access_policy,
   base_skill,
@@ -425,7 +445,7 @@ duplicate_readme_output, duplicate_readme_success = run_checker(
   base_map_text,
   base_spec_text,
   base_inventory,
-  "#{base_readme}\nThe current capability map covers all 84 operations in the published API as of 2099-01-01.\n",
+  "#{base_readme}\nThe current capability map covers all 85 operations in the published API as of 2099-01-01.\n",
   base_capability_spec,
   base_access_policy,
   base_skill,
@@ -441,7 +461,7 @@ readme_count_output, readme_count_success = run_checker(
   base_map_text,
   base_spec_text,
   base_inventory,
-  base_readme.sub("covers all 84 operations", "covers all 83 operations"),
+  base_readme.sub("covers all 85 operations", "covers all 84 operations"),
   base_capability_spec,
   base_access_policy,
   base_skill,
@@ -462,12 +482,12 @@ document_cases = [
   [
     "capability spec date drift",
     "capability spec snapshot date does not match source",
-    { capability_spec: base_capability_spec.sub("2026-08-20 snapshot", "2099-01-01 snapshot") }
+    { capability_spec: base_capability_spec.sub("2026-08-30 snapshot", "2099-01-01 snapshot") }
   ],
   [
     "capability spec count drift",
     "capability spec operation count does not match source",
-    { capability_spec: base_capability_spec.sub("contains 84 operations", "contains 83 operations") }
+    { capability_spec: base_capability_spec.sub("contains 85 operations", "contains 84 operations") }
   ],
   [
     "duplicate capability spec provenance",

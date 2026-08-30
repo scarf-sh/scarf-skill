@@ -44,6 +44,14 @@
 - [ ] post-change response includes resource id and verification status
 - [ ] local-map drift is checked against the published OpenAPI document without guessing a mutation contract
 
+- [ ] aggregation selectors, total/timeline rollups, and JSON/NDJSON responses are covered
+- [ ] equal-valued artifact rows are retained; unique counts are never added across groups
+- [ ] package and pixel counts are reported separately, never added into a combined distinct
+- [ ] company-segment queries use total rollup, JSON, and one dimension
+- [ ] the reported window comes from the server's effective-window headers, not a client-side prediction
+- [ ] selector combinations the API rejects fail before a request is spent
+- [ ] normal public entitlement and usage accounting is preserved (no `_ui` marker)
+
 ## Distribution
 
 - [ ] `README.md`, `SKILL.md`, and references agree on the access model
