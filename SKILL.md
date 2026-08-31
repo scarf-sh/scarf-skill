@@ -33,22 +33,21 @@ The published document currently labels four v3 operation security requirements 
 
 - Permit public `GET` operations and the read-like `POST /v2/search` and `POST /v3/organizations/{owner}/ai/chat` operations without mutation confirmation.
 - Use UTC for date logic. If an analytics request gives no range, use `[now-30d, now)`.
-- Prefer small, scoped calls. Apply a relevant `filter_id`.
+- Prefer small, scoped calls. Use the operation's declared filter parameter: v3 aggregations use `filter`, not `filter_id`.
 - Treat every list response as potentially truncated: the API defaults to 10 results and returns no pagination metadata. Pass an explicit `per_page` (normally 200), then increment `page` until a short page is returned. If pagination is incomplete, label the result partial.
-- Route aggregate analytics to `GET /v3/insights/{owner}/aggregations/export`, not the legacy v2 aggregate route.
+- Route aggregate analytics to `GET /v3/insights/{owner}/aggregations/export`, not the legacy v2 aggregate route. Read [Aggregation queries](references/spec.md#aggregation-queries) for artifact selection, grouping, date windows, JSON company segments, and distinct-count semantics.
 - Treat page/company questions such as “who viewed this page?” or “which companies visited this URL?” as aggregate analytics. Use the page/company recipe below; never fall back to Scarf AI chat, raw tracking-pixel exports, or the legacy v2 aggregate route. Call Scarf AI chat only when the user explicitly asks to query or converse with Scarf AI.
 - Route Dependency Radar to `GET /v2/organizations/{organization_name}/download-feed` with explicit `domain` and `date`; never substitute company events or company rollups.
 - If Dependency Radar is unavailable, identify it as open beta and suggest Scarf Slack or `help@scarf.sh`.
 
 ### Page/company analytics recipe
 
-1. Resolve the exact owner and requested URL path. If no window was supplied, use the latest 30 UTC date buckets: `end_date` is tomorrow's UTC date (exclusive) and `start_date` is 30 days earlier.
-2. Call `scripts/aggregation_export.rb` with `rollup=daily` and the single two-dimensional `breakdown_set=by-company,by-referer`. Do not use `by-endpoint`: it returns endpoint identifiers, not URL paths.
-3. Parse each non-empty NDJSON line, parse each `referer` as a URI, and retain rows whose URI path exactly equals the requested path. Query strings and UTM parameters therefore remain included while prefix or substring paths do not match.
-4. Apply the cross-artifact rule before summarizing: rows that are identical in every field except `artifact` are one observation and count once; keep the lexicographically first artifact as deterministic evidence. Rows that differ in any analytics field remain artifact-scoped and must not be silently combined.
-5. Label `total` sums as aggregate events, never unique visitors or people. Classify firms or industries only after the matching Scarf rows are selected, and label that enrichment as externally sourced rather than Scarf visitation attribution.
+1. Resolve the owner and how the requested page is tracked. `by-referer` reads raw referrer URLs; it does not apply a configured `$page` variable mapping. Inspect `getUserDefinedVariables` and the filter catalog when a custom variable represents the page. Use `by-variable` and `request_variable` filters for that case; do not treat an empty raw-referrer result as proof of no visits.
+2. For a raw-referrer page, call `scripts/aggregation_export.rb` with `--path /requested/path --rollup daily --breakdown by-company --breakdown by-referer --no-group-by-artifact`. Pass `--filter REF` when a saved or adhoc referrer filter can bound the response. Do not use `by-endpoint` for URL paths.
+3. The helper matches exact URI paths, including query/UTM variants and excluding prefix/substring paths. It preserves all matching rows: identical aggregate values on different artifacts are not evidence of duplicate events. Group artifacts on the server instead of deduplicating aggregate rows in the client.
+4. State the window from the helper's `effective_window`, which echoes the server's `X-Scarf-Effective-*-Date` headers, rather than the window you predicted. Report totals as aggregate events, not unique visitors or people. Unique counts cannot be summed across dates, referrers, companies, or artifact types. A unique count must come from one server-computed group covering the requested scope. Apply outside VC/PE or industry classification only after selecting the Scarf visitation rows, and label that enrichment separately.
 
-The helper requires an explicit rollup, supports one- or two-dimensional breakdown sets, reads `SCARF_API_TOKEN` only from its environment, and never prints request headers or the token.
+The same helper supports non-page aggregations without `--path`, explicit rollups (including `total`), one- or two-dimensional breakdown sets, artifact selectors, filters, grouping, and JSON or NDJSON. It reads `SCARF_API_TOKEN` only from the environment and preserves the public endpoint's normal entitlement and usage accounting; never send the private `_ui` marker.
 
 ## Admin profile
 

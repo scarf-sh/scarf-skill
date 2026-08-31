@@ -2,8 +2,8 @@
   "version": "v2-public-api",
   "source": {
     "url": "https://api.scarf.sh/static/api-v2.yaml",
-    "asOf": "2026-08-20",
-    "operationCount": 84
+    "asOf": "2026-08-30",
+    "operationCount": 85
   },
   "policy": {
     "defaultProfile": "read",
@@ -59,7 +59,8 @@
       "importPackageEvents",
       "importTrackingPixelEvents",
       "abortEventImport",
-      "deleteCollection"
+      "deleteCollection",
+      "request_provider_adoption_access"
     ]
   },
   "capabilities": {
@@ -161,7 +162,8 @@
     "discovery_and_ai": [
       "search",
       "chat_with_scarf_ai",
-      "get_provider_adoption_leaderboard"
+      "get_provider_adoption_leaderboard",
+      "request_provider_adoption_access"
     ],
     "endpoint_feedback": [
       "create_positive_endpoint_feedback",
@@ -255,7 +257,8 @@
       "importTrackingPixelEvents",
       "abortEventImport",
       "create_positive_endpoint_feedback",
-      "create_negative_endpoint_feedback"
+      "create_negative_endpoint_feedback",
+      "request_provider_adoption_access"
     ]
   },
   "publicOperationManifest": [
@@ -342,6 +345,7 @@
     "get_provider_adoption_leaderboard",
     "chat_with_scarf_ai",
     "create_positive_endpoint_feedback",
-    "create_negative_endpoint_feedback"
+    "create_negative_endpoint_feedback",
+    "request_provider_adoption_access"
   ]
 }
