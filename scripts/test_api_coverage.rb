@@ -299,6 +299,10 @@ cases = [
     spec.dig("paths", "/v3/insights/{owner}/aggregations/export", "get", "parameters").find { |parameter| parameter["name"] == "format" }.fetch("schema")["enum"].delete("json")
     inventory
   end],
+  ["funnel-stage enum drift", "funnel-stage guidance values do not match published schema", lambda do |_map, spec, inventory|
+    spec.dig("components", "schemas", "FunnelStage", "enum") << "reemerging"
+    inventory
+  end],
   ["contact submission made read-like", "read-like operations or routes changed", lambda do |map, _spec, inventory|
     map["policy"]["readLikePost"] << "request_provider_adoption_access"
     map["policy"]["protectedMutations"].delete("request_provider_adoption_access")
@@ -513,6 +517,16 @@ document_cases = [
     "filter catalog drift",
     "filter catalog changed without review",
     { filter_catalog: base_filter_catalog.sub("Filter management remains", "Filter management stays") }
+  ],
+  [
+    "singular funnel-stage operator",
+    "funnel-stage example must use company_funnelstage.ops array",
+    {
+      filter_catalog: base_filter_catalog.sub(
+        '{"company_funnelstage":{"ops":["experimentation"]}}',
+        '{"company_funnelstage":{"op":"experimentation"}}'
+      )
+    }
   ],
   [
     "prompt acceptance drift",

@@ -98,8 +98,11 @@ Common operators:
 
 ### Funnel stage filter (`NewFunnelStageFilter`)
 
+`ops` accepts one or more stage values: `interest`, `investigation`,
+`experimentation`, `ongoing-usage`, `inactive`.
+
 ```json
-{ "op": "interest|investigation|experimentation|ongoing-usage|inactive" }
+{"company_funnelstage":{"ops":["experimentation"]}}
 ```
 
 ### Company size filter (`NewCompanySizeFilter`)

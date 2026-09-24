@@ -22,7 +22,7 @@ EXPECTED_SOURCE_AS_OF = "2026-08-30"
 EXPECTED_ACCESS_POLICY_DIGEST = "48793f4966e01c90f050db1ba29a2a52dc4a21f3aaf9318a761d73f79b3ba218"
 EXPECTED_SKILL_DIGEST = "1c1f0ca226a202e11f6c029c9a49b0d3e6885195fca0b3c4f06a84ca2be6b927"
 EXPECTED_CAPABILITY_SPEC_DIGEST = "251976bfdd6572ca98ce783e060d1f3cad0495817e97dc546b6f039745c072a8"
-EXPECTED_FILTER_CATALOG_DIGEST = "74ce21a067d8b3d87cbffb3aefcdb7c8abd700ca67f014511e275501470cd1b0"
+EXPECTED_FILTER_CATALOG_DIGEST = "995a99f856b8d582b04e66496ef1ffd8410e971745b4ab2783e588acf079cc2e"
 EXPECTED_PROMPT_EXAMPLES_DIGEST = "38ae92fb18def86a20344ac729d1ed4ea42e8e49972183d79ba9a40a8f7b7c64"
 EXPECTED_LAUNCH_CHECKLIST_DIGEST = "882ad8266794b6c6219a24cd38746dfad3cacad761310f8d9e196b77886e138e"
 EXPECTED_INVENTORY_DIGEST = "77f61e3a25960c7d9850418e4c4b99b2de9611e72eff02a756fed4a16b25679d"
@@ -381,6 +381,37 @@ errors << "filter catalog changed without review" unless Digest::SHA256.hexdiges
 errors << "prompt examples changed without review" unless Digest::SHA256.hexdigest(prompt_examples_text) == EXPECTED_PROMPT_EXAMPLES_DIGEST
 errors << "launch checklist changed without review" unless Digest::SHA256.hexdigest(launch_checklist_text) == EXPECTED_LAUNCH_CHECKLIST_DIGEST
 errors << "inventory instructions changed without review" unless Digest::SHA256.hexdigest(inventory_text) == EXPECTED_INVENTORY_DIGEST
+
+funnel_stage_values = spec.dig("components", "schemas", "FunnelStage", "enum")
+unless funnel_stage_values.is_a?(Array) && funnel_stage_values.all? { |value| value.is_a?(String) }
+  errors << "published FunnelStage enum is missing"
+end
+
+funnel_stage_sections = filter_catalog_text.scan(
+  /^### Funnel stage filter \(`NewFunnelStageFilter`\)\n(?<section>.*?)(?=^### |\z)/m
+).flatten
+if funnel_stage_sections.length != 1
+  errors << "filter catalog must contain exactly one funnel-stage section"
+else
+  funnel_stage_section = funnel_stage_sections.first
+  example_text = funnel_stage_section[/```json\n(?<example>.*?)\n```/m, :example]
+  begin
+    example = JSON.parse(example_text.to_s)
+    expected_example = { "company_funnelstage" => { "ops" => ["experimentation"] } }
+    errors << "funnel-stage example must use company_funnelstage.ops array" unless example == expected_example
+  rescue JSON::ParserError
+    errors << "funnel-stage example must be valid JSON"
+  end
+
+  if funnel_stage_values.is_a?(Array)
+    expected_guidance = "`ops` accepts one or more stage values: #{funnel_stage_values.map { |value| "`#{value}`" }.join(", ")}."
+    normalized_section = funnel_stage_section.gsub(/\s+/, " ").strip
+    unless normalized_section.include?(expected_guidance)
+      errors << "funnel-stage guidance values do not match published schema"
+    end
+  end
+end
+
 errors << "public API server changed" unless spec.fetch("servers", []).map { |server| server["url"] } == [EXPECTED_API_SERVER]
 errors << "path-level server overrides are not allowed: #{path_server_overrides.join(", ")}" unless path_server_overrides.empty?
 unless operation_server_overrides.empty?
