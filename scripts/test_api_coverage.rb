@@ -299,7 +299,7 @@ cases = [
     spec.dig("paths", "/v3/insights/{owner}/aggregations/export", "get", "parameters").find { |parameter| parameter["name"] == "format" }.fetch("schema")["enum"].delete("json")
     inventory
   end],
-  ["funnel-stage enum drift", "funnel-stage guidance values do not match published schema", lambda do |_map, spec, inventory|
+  ["funnel-stage enum drift", "published FunnelStage enum does not match documented stages", lambda do |_map, spec, inventory|
     spec.dig("components", "schemas", "FunnelStage", "enum") << "reemerging"
     inventory
   end],

@@ -74,6 +74,7 @@ EXPECTED_INVENTORY_SECTIONS = [
 ].freeze
 EXPECTED_INVENTORY_SECTION_DIGEST = "eddc8fd774942eab70803bea9bb63df755baefb0ddcf1548dfbb25d3e44d6d2b"
 EXPECTED_REQUEST_SCHEMA_DIGEST = "ca0b5511cdae7649b462c7c4b048ee41ad9a2b04c0ea89dad99e29b8b09a3ba7"
+EXPECTED_FUNNEL_STAGES = %w[interest investigation experimentation ongoing-usage inactive].freeze
 
 class DuplicateKeyHash < Hash
   def []=(key, value)
@@ -383,8 +384,9 @@ errors << "launch checklist changed without review" unless Digest::SHA256.hexdig
 errors << "inventory instructions changed without review" unless Digest::SHA256.hexdigest(inventory_text) == EXPECTED_INVENTORY_DIGEST
 
 funnel_stage_values = spec.dig("components", "schemas", "FunnelStage", "enum")
-unless funnel_stage_values.is_a?(Array) && funnel_stage_values.all? { |value| value.is_a?(String) }
-  errors << "published FunnelStage enum is missing"
+unless funnel_stage_values.is_a?(Array) && funnel_stage_values.all? { |value| value.is_a?(String) } &&
+       funnel_stage_values.sort == EXPECTED_FUNNEL_STAGES.sort
+  errors << "published FunnelStage enum does not match documented stages"
 end
 
 funnel_stage_sections = filter_catalog_text.scan(
@@ -403,12 +405,10 @@ else
     errors << "funnel-stage example must be valid JSON"
   end
 
-  if funnel_stage_values.is_a?(Array)
-    expected_guidance = "`ops` accepts one or more stage values: #{funnel_stage_values.map { |value| "`#{value}`" }.join(", ")}."
-    normalized_section = funnel_stage_section.gsub(/\s+/, " ").strip
-    unless normalized_section.include?(expected_guidance)
-      errors << "funnel-stage guidance values do not match published schema"
-    end
+  expected_guidance = "`ops` accepts one or more stage values: #{EXPECTED_FUNNEL_STAGES.map { |value| "`#{value}`" }.join(", ")}."
+  normalized_section = funnel_stage_section.gsub(/\s+/, " ").strip
+  unless normalized_section.include?(expected_guidance)
+    errors << "funnel-stage guidance values do not match published schema"
   end
 end
 
