@@ -38,6 +38,12 @@ You can optionally include:
 
 Then apply the returned `id` via `filter_id` on supported analytics endpoints.
 
+Complete funnel-stage filter entry:
+
+```json
+{"company_funnelstage":{"ops":["experimentation"]}}
+```
+
 ## Authoritative filter input description
 
 Payload used to create or update insights filters.
@@ -102,7 +108,7 @@ Common operators:
 `experimentation`, `ongoing-usage`, `inactive`.
 
 ```json
-{"company_funnelstage":{"ops":["experimentation"]}}
+{"ops":["experimentation"]}
 ```
 
 ### Company size filter (`NewCompanySizeFilter`)
