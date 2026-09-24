@@ -18,14 +18,14 @@ DEFAULT_PROMPT_EXAMPLES = File.join(ROOT, "references", "prompt-examples.md")
 DEFAULT_LAUNCH_CHECKLIST = File.join(ROOT, "references", "launch-checklist.md")
 EXPECTED_API_SERVER = "https://api.scarf.sh"
 EXPECTED_OPENAPI_VERSION = "3.0.3"
-EXPECTED_SOURCE_AS_OF = "2026-08-30"
+EXPECTED_SOURCE_AS_OF = "2026-09-24"
 EXPECTED_ACCESS_POLICY_DIGEST = "48793f4966e01c90f050db1ba29a2a52dc4a21f3aaf9318a761d73f79b3ba218"
 EXPECTED_SKILL_DIGEST = "1c1f0ca226a202e11f6c029c9a49b0d3e6885195fca0b3c4f06a84ca2be6b927"
-EXPECTED_CAPABILITY_SPEC_DIGEST = "251976bfdd6572ca98ce783e060d1f3cad0495817e97dc546b6f039745c072a8"
+EXPECTED_CAPABILITY_SPEC_DIGEST = "c975e8c280e323dcaec635eb563718239544f23157d8d374a806b54fb778e13d"
 EXPECTED_FILTER_CATALOG_DIGEST = "995a99f856b8d582b04e66496ef1ffd8410e971745b4ab2783e588acf079cc2e"
 EXPECTED_PROMPT_EXAMPLES_DIGEST = "38ae92fb18def86a20344ac729d1ed4ea42e8e49972183d79ba9a40a8f7b7c64"
 EXPECTED_LAUNCH_CHECKLIST_DIGEST = "882ad8266794b6c6219a24cd38746dfad3cacad761310f8d9e196b77886e138e"
-EXPECTED_INVENTORY_DIGEST = "77f61e3a25960c7d9850418e4c4b99b2de9611e72eff02a756fed4a16b25679d"
+EXPECTED_INVENTORY_DIGEST = "0487990c20c3ad53991716d251bd422b0113c42e066576fabebcf6d80e3b2ab4"
 EXPECTED_AUTH_DESCRIPTION_DIGEST = "8e396c45ea1c55c7f3734d9dd4fc989f212122259625b1efe1767aff26b6022b"
 EXPECTED_SECURITY_SCHEMES = {
   "ApiToken" => {
@@ -37,6 +37,7 @@ EXPECTED_SECURITY_SCHEMES = {
 EXPECTED_SECURITY_SCHEME_ALIASES = { "ScarfBearer" => "ApiToken" }.freeze
 EXPECTED_OPERATION_SECURITY = [
   ["export_entity_aggregations", "GET", "/v3/insights/{owner}/aggregations/export", [{ "ApiToken" => [] }]],
+  ["get_scarf_ai_chat", "GET", "/v3/organizations/{owner}/ai/chat", [{ "ApiToken" => [] }]],
   ["chat_with_scarf_ai", "POST", "/v3/organizations/{owner}/ai/chat", [{ "ApiToken" => [] }]],
   ["create_positive_endpoint_feedback", "POST", "/v3/organizations/{owner}/endpoint-feedback/matches", [{ "ApiToken" => [] }]],
   ["create_negative_endpoint_feedback", "POST", "/v3/organizations/{owner}/endpoint-feedback/unmatches", [{ "ApiToken" => [] }]]
@@ -66,14 +67,14 @@ EXPECTED_PROTECTED_CONDITIONS = {
   "createCollection" => "membership is broad, inferred, or not fully enumerated",
   "updateCollection" => "membership removal or membership is broad, inferred, or not fully enumerated"
 }.freeze
-EXPECTED_PUBLIC_OPERATION_DIGEST = "8702d33c981ebe2b871e332f830ac785175ff76ac41caec3731f879258e7ee92"
-EXPECTED_CAPABILITY_DIGEST = "f41d01cbc4ce5d51e87e11acb058948c12c9241d745c6e3e8c085837e349771c"
+EXPECTED_PUBLIC_OPERATION_DIGEST = "926cd2a67bf57ecf25901526f167a98bd2fbd82d987e070aa8b7f59817dd5990"
+EXPECTED_CAPABILITY_DIGEST = "b98331809f76d9e80e3d0ecdbf17fc916c24690e4d56ca2d427f7eae8dd94239"
 EXPECTED_INVENTORY_SECTIONS = [
   "Collections", "Company", "Domains", "External event import", "Insights Filters", "Organization",
   "Organizations", "Packages", "Search", "Tracking Pixels", "Users", "v3 Insights and AI"
 ].freeze
-EXPECTED_INVENTORY_SECTION_DIGEST = "eddc8fd774942eab70803bea9bb63df755baefb0ddcf1548dfbb25d3e44d6d2b"
-EXPECTED_REQUEST_SCHEMA_DIGEST = "ca0b5511cdae7649b462c7c4b048ee41ad9a2b04c0ea89dad99e29b8b09a3ba7"
+EXPECTED_INVENTORY_SECTION_DIGEST = "a79b9a4d0c4961f3fe13fe83d8a4cb2d28242b0d331f4466d08e35beed0ea647"
+EXPECTED_REQUEST_SCHEMA_DIGEST = "c9b72c28c1dc06a6dafc6e9a0009a1e5d504ef933e1f2c280358bb02fb7294c4"
 EXPECTED_FUNNEL_STAGES = %w[interest investigation experimentation ongoing-usage inactive].freeze
 
 class DuplicateKeyHash < Hash

@@ -11,7 +11,7 @@ The skill separates work into two request-scoped profiles:
 
 The skill calls `https://api.scarf.sh` directly over authenticated HTTPS with a user-provided `SCARF_API_TOKEN`; it does not require a Scarf-specific tool or server. The read execution profile is the default, and admin behavior is activated only for the current explicit task. Guardrails include exact target resolution, pre-change reads, fresh confirmation for protected operations, serialized mutations, and post-change verification. A skill is not a security boundary, so use least-privileged and separate read/admin credentials where the API and deployment support them.
 
-The current capability map covers all 85 operations in the published v2/v3 OpenAPI document as of 2026-08-30. The release checker independently pins every operation ID to its approved HTTP method and path so policy assignments cannot silently move to another route.
+The current capability map covers all 86 operations in the published v2/v3 OpenAPI document as of 2026-09-24. The release checker independently pins every operation ID to its approved HTTP method and path so policy assignments cannot silently move to another route.
 
 ## Defaults
 
