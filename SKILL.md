@@ -32,7 +32,6 @@ The published document currently labels four v3 operation security requirements 
 ## Read profile
 
 - Permit public `GET` operations and the read-like `POST /v2/search` and `POST /v3/organizations/{owner}/ai/chat` operations without mutation confirmation.
-- To restore a Scarf AI conversation with `get_scarf_ai_chat`, pass its existing conversation ID as the required `threadId` query parameter.
 - Use UTC for date logic. If an analytics request gives no range, use `[now-30d, now)`.
 - Prefer small, scoped calls. Use the operation's declared filter parameter: v3 aggregations use `filter`, not `filter_id`.
 - Treat every list response as potentially truncated: the API defaults to 10 results and returns no pagination metadata. Pass an explicit `per_page` (normally 200), then increment `page` until a short page is returned. If pagination is incomplete, label the result partial.

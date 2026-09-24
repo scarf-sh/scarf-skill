@@ -20,7 +20,7 @@ EXPECTED_API_SERVER = "https://api.scarf.sh"
 EXPECTED_OPENAPI_VERSION = "3.0.3"
 EXPECTED_SOURCE_AS_OF = "2026-09-24"
 EXPECTED_ACCESS_POLICY_DIGEST = "48793f4966e01c90f050db1ba29a2a52dc4a21f3aaf9318a761d73f79b3ba218"
-EXPECTED_SKILL_DIGEST = "20e7d96d4129ce09ee28cbfb91d6952e5a69a394ef1aef83754cfc6eda5dc61f"
+EXPECTED_SKILL_DIGEST = "1c1f0ca226a202e11f6c029c9a49b0d3e6885195fca0b3c4f06a84ca2be6b927"
 EXPECTED_CAPABILITY_SPEC_DIGEST = "c975e8c280e323dcaec635eb563718239544f23157d8d374a806b54fb778e13d"
 EXPECTED_FILTER_CATALOG_DIGEST = "329200019e414abbff4cb5b81e0968f760de86513c5cd003454b104bb4bb15fa"
 EXPECTED_PROMPT_EXAMPLES_DIGEST = "38ae92fb18def86a20344ac729d1ed4ea42e8e49972183d79ba9a40a8f7b7c64"
@@ -413,9 +413,21 @@ else
   end
 end
 
-expected_funnel_stage_entry = '{"company_funnelstage":{"ops":["experimentation"]}}'
-unless filter_catalog_text.include?(expected_funnel_stage_entry)
-  errors << "filter catalog must include the complete company_funnelstage.ops entry"
+complete_funnel_stage_entries = filter_catalog_text.scan(
+  /^Complete funnel-stage filter entry:\n\n```json\n(?<example>.*?)\n```/m
+).flatten
+if complete_funnel_stage_entries.length != 1
+  errors << "filter catalog must contain exactly one complete funnel-stage entry"
+else
+  begin
+    complete_entry = JSON.parse(complete_funnel_stage_entries.first)
+    expected_complete_entry = { "company_funnelstage" => { "ops" => ["experimentation"] } }
+    unless complete_entry == expected_complete_entry
+      errors << "complete funnel-stage entry must use company_funnelstage.ops array"
+    end
+  rescue JSON::ParserError
+    errors << "complete funnel-stage entry must be valid JSON"
+  end
 end
 
 errors << "public API server changed" unless spec.fetch("servers", []).map { |server| server["url"] } == [EXPECTED_API_SERVER]

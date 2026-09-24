@@ -533,6 +533,16 @@ document_cases = [
     }
   ],
   [
+    "singular complete funnel-stage entry",
+    "complete funnel-stage entry must use company_funnelstage.ops array",
+    {
+      filter_catalog: base_filter_catalog.sub(
+        '{"company_funnelstage":{"ops":["experimentation"]}}',
+        '{"company_funnelstage":{"op":"experimentation"}}'
+      )
+    }
+  ],
+  [
     "prompt acceptance drift",
     "prompt examples changed without review",
     { prompt_examples: base_prompt_examples.sub("### Stale confirmation", "### Old confirmation") }
