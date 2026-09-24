@@ -524,7 +524,17 @@ document_cases = [
   ],
   [
     "singular funnel-stage operator",
-    "funnel-stage example must use company_funnelstage.ops array",
+    "funnel-stage operator example must use an ops array",
+    {
+      filter_catalog: base_filter_catalog.sub(
+        "\n{\"ops\":[\"experimentation\"]}\n",
+        "\n{\"op\":\"experimentation\"}\n"
+      )
+    }
+  ],
+  [
+    "singular complete funnel-stage entry",
+    "complete funnel-stage entry must use company_funnelstage.ops array",
     {
       filter_catalog: base_filter_catalog.sub(
         '{"company_funnelstage":{"ops":["experimentation"]}}',
